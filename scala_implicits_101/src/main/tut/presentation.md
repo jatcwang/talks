@@ -7,12 +7,9 @@ title: Scala Implicits 101
 
 - What are implicits? Why are they useful?
 - How does the compiler resolve implicits
-- Best practices
-- Tips and tricks when working with implicits
+- Best practices & tips
 
 ## Why Implicits?
-
-**Implicits makes Scala awesome**
 
 - Reduce boilerplate in everyday code
 - Typeclasses
@@ -43,18 +40,22 @@ addThem(1) // 4
 
 ```
 
+At runtime, the JVM sees `addThem(a: Int, b: Int)`
+
 ## Implicit Conversions
 
 Functions the compiler applies for you
 
 ```tut:silent
+def needString(str: String): String = str
+
 implicit def intToString(i: Int): String = i.toString
 
-val str: String = 2 // "2"
+val s = needString(2) // "2"
 
 // equivilent to...
 
-val str: String = intToString(2)
+needString(intToString(2))
 ```
 
 ## Implicit Conversions - Ex2
@@ -95,7 +96,7 @@ val b: String = anyToString(List(1,2))
 
 - `implicit val`s are **facts**
 - `implicit def`s are **rules**
-  - Given `X`, Obtain `Y` (by applying the function)
+  - Given `X`, Obtain `Y`
 - Compiler use the available implicits to solve the puzzle (satisfy the type system)
 
 ## Two parts of implicit resolution
@@ -113,13 +114,17 @@ implicit def intToString(i: Int): String = i.toString
 - `Int` doesn't have a `startsWith` method
 - Through implicit search, we have Int => String conversion (`intToString`)
 - String has a `startsWith(x: String)` method
-- Scala compiler generates code, with the implicits applied
+- Scala compiler generates code, with resolved implicit def applied
 
 <div class="fragment">
 ```tut:silent
 intToString(2).startsWith("someString")
 ```
 </div>
+
+---
+
+![](./images/cat_fit_single.jpg)
 
 ## JSON Conversion (example)
 
@@ -137,18 +142,19 @@ implicit val encodeInt: Encoder[Int] = (i: Int) => i.toString
 
 ## JSON Conversion (example)
 
-- We don't want to write separate `Encoder` instances for `List[Int]` and `List[String]`
+- Don't want to write manually `Encoder` instances for `List[Int]`, `List[String]` and more...
 
 - If we know how to convert a type `A` into JSON, then we know how to turn a list of `A` into JSON!
 
 <div class="fragment">
 ```tut:silent
 implicit def encodeList[A](implicit encodeA: Encoder[A]):
-  Encoder[List[A]] =
-  (list: List[A]) => {
-    "[" +
-    list.map(encodeA.encode(_)).mkString(",") +
-    "]"
+  Encoder[List[A]] = new Encoder[List[A]] {
+      def encode(list: List[A]) = {
+        "[" +
+        list.map(encodeA.encode(_)).mkString(",") +
+        "]"
+      }
   }
 ```
 </div>
@@ -156,28 +162,36 @@ implicit def encodeList[A](implicit encodeA: Encoder[A]):
 ## JSON Conversion (example)
 
 ```tut:silent
-def printJson[A](obj: A)(implicit en: Encoder[A]) = {
+def printJson[T](obj: T)(implicit en: Encoder[T]) = {
   println(en.encode(obj))
 }
 ```
 
 ```tut:silent
-printJson(1) // 1
-printJson(List(1,2,3)) // [1,2,3]
+printJson(1) // "1"
+printJson(List(1,2,3)) // "[1,2,3]"
 ```
 
-## How did it work?
+## How does it work?
+
+```tut:silent
+printJson(List(1,2,3))   // def printJson[T](obj: T)(implicit en: Encoder[T])
+```
 
 - printJson is given a `List[Int]`, therefore it needs an `Encoder[List[Int]]`
 - **Fact**: `Encoder[Int]`
-- **Rule**: Given `Encoder[A]`, we can get `Encoder[List[A]]` (for any type `A`)
-- By combining the fact and the rule, we get `Encoder[List[Int]]`
+- **Rule**: Given `Encoder[A]`, we can get `Encoder[List[A]]`
+- By combining the fact and the rule, we have `Encoder[List[Int]]`
 
 <div class="fragment">
 ```tut:silent
 printJson(List(1,2,3))(encodeList(encodeInt))
 ```
 </div>
+
+---
+
+![](./images/cat_fit_many.jpg)
 
 # Finding Implicits
 
@@ -214,54 +228,36 @@ object Lexical {
 ## Implicit Scope Example 1
 
 ```tut:silent
-object Encoder { // Companion object of Encoder
-  implicit def encodeMap[A](implicit encoder: Encoder[A])
-    : Encoder[Map[String, A]] = ???
-}
-
 trait ParentClass {
   implicit val encodeDouble: Encoder[Double] = ???
 }
 ```
 
-```tut:invisible
-import Encoder._
-```
-
 ```tut:silent
 object UseSite extends ParentClass { // Implicit from parent class's body
-  printJson(Map("h" -> 23.0)) // { "h": 23.0 }
+
+  // def implicitly[I](implicit imp: I): I = imp
+  implicitly[Encoder[Double]] // compiles, implicit found
+
 }
 ```
 
 ## Implicit Scope Example 2
 
 ```scala
+object Encoder { // Companion object of Encoder
+  implicit def encodeMap[A](implicit encoder: Encoder[A])
+    : Encoder[Map[String, A]] = ???
+}
+
 final case class Dog(name: String)
 
 object Dog {
   implicit val encodeDog: Encoder[Dog] = (d: Dog) => d.toString
 }
+
+implicitly[Encoder[Map[String, Dog]]] // compiles, no explicit imports needed!
 ```
-
-```scala
-val dog: Dog = Dog("Bruce")
-printJson(List(dog))
-```
-
-implicit parameter required is `Encoder[List[Dog]]`
-
-Searching is done in companion object
-
-> - `Encoder`
-> - `List`, `LinearSeq`, `Seq` ...
-> - `Dog`, `Animal`, ...
-
----
-
-Types involved are `Encoder`, `List` and `Dog`
-
-![](./images/implicit_search_companion_object.svg)
 
 # Best Practices
 
@@ -273,8 +269,6 @@ Types involved are `Encoder`, `List` and `Dog`
 1. Canonicalness of typeclass instances
 
 ## 1. Maybe you don't need implicits
-
-> - Do you really need it to be an implicit?
 
 ```scala
 def spawnActors(implicit actorSystem: ActorSystem) = ???
@@ -289,7 +283,7 @@ spawnActors(myActorSystem)
 ```
 
 - Trade-off between correctness, readability, compile time, and ergonomics. 
-- Is it worth it?
+- Is it worth the convenience?
 
 ## 2. Put implicits in companion objects
 
@@ -301,7 +295,7 @@ spawnActors(myActorSystem)
 - Defining a new data type (e.g. `Dog`)?
   - Put it in `Dog` companion object
 - Defining a new typeclass (e.g. `Encoder`)?
-  - Add sane implementations for basic data types (Int, Double, String, etc) if it makes sense
+  - Add instances for basic data types (Int, Double, String, etc) if it makes sense
 
 ## 3. Avoid implicit conversions
 
@@ -390,6 +384,8 @@ object Antique {
 - Implicit classes 
   - Simpler syntax to define extension methods
   - Allocation-free if implicit class extends `AnyVal`
+- [https://github.com/tek/splain](https://github.com/tek/splain)
+  - Compiler plugin which logs the implicit search path and gives you more precisely what implicit is missing
 
 ## Further Learning
 
