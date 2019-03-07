@@ -16,15 +16,16 @@ title: Scala Implicits 101
 - Extension methods
 - Clean **Domain Specific Languages** (DSL)
 
-## What are implicits
+## Implicit Resolution - What's that?
 
-Filling in parameters and function calls for you,
-implicitly!
+Automatically filling in parameters and function calls for you!
 
+<div class="fragment">
 > - Two types
 >   - Implicit Parameters
 >   - Implicit Conversions
-- Everything resolved at compile time
+- All resolved at compile time
+</div>
 
 ## Implicit Parameters
 
@@ -47,15 +48,15 @@ At runtime, the JVM sees `addThem(a: Int, b: Int)`
 Functions the compiler applies for you
 
 ```tut:silent
-def needString(str: String): String = str
+def wantString(str: String): String = str
 
 implicit def intToString(i: Int): String = i.toString
 
-val s = needString(2) // "2"
+val s = wantString(2) // "2"
 
-// equivilent to...
+// compiles down to the following at runtime...
 
-needString(intToString(2))
+wantString(intToString(2))
 ```
 
 ## Implicit Conversions - Ex2
@@ -76,19 +77,21 @@ intToString(2).startsWith("2")
 
 ## Implicit Conversions - Ex3
 
+With generic parameters!
+
 ```tut:silent
 implicit def anyToString[T](obj: T): String = obj.toString
 
-val a: String = 1 // "1"
-val b: String = List(1,2) // "List(1,2)"
+wantString(Map("k" -> "v")) // "Map(k -> v)"
+wantString(List(1,2)) // "List(1,2)"
 
 // compiles down to...
 
-val a: String = anyToString(1) 
-val b: String = anyToString(List(1,2))
+wantString(anyToString(Map("k" -> "v")))
+wantString(anyToString(List(1,2)))
 ```
 
-# Understanding Implicit resolution
+# Understanding Implicit Resolution
 
 ## Implicit Resolution...
 
@@ -96,7 +99,7 @@ val b: String = anyToString(List(1,2))
 
 - `implicit val`s are **facts**
 - `implicit def`s are **rules**
-  - Given `X`, Obtain `Y`
+  - Given some existing facts, derive a new fact
 - Compiler use the available implicits to solve the puzzle (satisfy the type system)
 
 ## Two parts of implicit resolution
@@ -112,9 +115,9 @@ implicit def intToString(i: Int): String = i.toString
 ```
 
 - `Int` doesn't have a `startsWith` method
-- Through implicit search, we have Int => String conversion (`intToString`)
+- We got `Int => String` implicit conversion
 - String has a `startsWith(x: String)` method
-- Scala compiler generates code, with resolved implicit def applied
+- The types match. Scala compiler generates code, with resolved implicit conversions applied
 
 <div class="fragment">
 ```tut:silent
@@ -137,12 +140,15 @@ trait Encoder[A] {
   def encode(obj: A): Json
 }
 
-implicit val encodeInt: Encoder[Int] = (i: Int) => i.toString
+implicit val encodeInt: Encoder[Int] = new Encoder[Int] { 
+  def encode(i: Int) = i.toString
+}
 ```
 
 ## JSON Conversion (example)
 
-- Don't want to write manually `Encoder` instances for `List[Int]`, `List[String]` and more...
+- Let's encode `List` of things!
+- Don't want to manually write `Encoder` instances for `List[Int]`, `List[String]`, etc etc
 
 - If we know how to convert a type `A` into JSON, then we know how to turn a list of `A` into JSON!
 
@@ -181,7 +187,7 @@ printJson(List(1,2,3))   // def printJson[T](obj: T)(implicit en: Encoder[T])
 - printJson is given a `List[Int]`, therefore it needs an `Encoder[List[Int]]`
 - **Fact**: `Encoder[Int]`
 - **Rule**: Given `Encoder[A]`, we can get `Encoder[List[A]]`
-- By combining the fact and the rule, we have `Encoder[List[Int]]`
+- By combining the fact and the rule, we get `Encoder[List[Int]]`
 
 <div class="fragment">
 ```tut:silent
@@ -193,12 +199,12 @@ printJson(List(1,2,3))(encodeList(encodeInt))
 
 ![](./images/cat_fit_many.jpg)
 
-# Finding Implicits
+# Searching for implicits
 
-## Where does Scala find implicits?
+## Where does Scala search for implicits?
 
 > - Lexical Scope
->   - Any implicits defined in the current code block
+>   - Any implicits defined/imported in the current code block
 > - Implicit Scope
 
 ## Implicits in lexical scope
@@ -207,21 +213,23 @@ printJson(List(1,2,3))(encodeList(encodeInt))
 
 ```tut:silent
 object Implicits {
-  implicit val int: Int = 1
+  implicit val implicitDouble: Double = 1.0
 }
 
 object Lexical {
-  import Implicits.int // or Implicits._
+  import Implicits.implicitDouble // or Implicits._
   implicit val str: String = "asdf"
 
-  // Implicits of type String and Int are available in this scope
+  // def implicitly[I](implicit imp: I): I = imp
+  implicitly[Double] // resolves to 1.0
+  implicitly[String] // resolves to "asdf"
 }
 ```
 
 ## "Implicit Scope"
 
 - Class body and parent class bodies
-  - Intuition: Anything you can directly reference by name
+  - Anything you can directly reference by name
 - Companion object of the types involved (and their parent classes)
 - package objects of the types involved\*
 
@@ -236,8 +244,7 @@ trait ParentClass {
 ```tut:silent
 object UseSite extends ParentClass { // Implicit from parent class's body
 
-  // def implicitly[I](implicit imp: I): I = imp
-  implicitly[Encoder[Double]] // compiles, implicit found
+  implicitly[Encoder[Double]] // compiles - found encodeDouble
 
 }
 ```
@@ -255,20 +262,29 @@ final case class Dog(name: String)
 object Dog {
   implicit val encodeDog: Encoder[Dog] = (d: Dog) => d.toString
 }
+```
 
-implicitly[Encoder[Map[String, Dog]]] // compiles, no explicit imports needed!
+```scala
+// compiles, no explicit imports needed!
+// Resolved using implicits found in companion objects
+implicitly[Encoder[Map[String, Dog]]] 
 ```
 
 # Best Practices
 
+## Guiding Principles
+
+> - Make code easy to reason about
+> - Make it hard to do the wrong thing
+
 ## Best Practices
 
-1. Maybe you don't need implicits
+1. Maybe you don't need implicits?
 1. Put implicits in companion objects
 1. Avoid implicit conversions
 1. Canonicalness of typeclass instances
 
-## 1. Maybe you don't need implicits
+## 1. Maybe you don't need implicits?
 
 ```scala
 def spawnActors(implicit actorSystem: ActorSystem) = ???
@@ -288,12 +304,12 @@ spawnActors(myActorSystem)
 ## 2. Put implicits in companion objects
 
 - No explicit import required!
-- The default location to look for implicits especially typeclass instances
+- The default location to look for implicits, especially for typeclass instances
 
---- 
+## 2. Put implicits in companion objects
 
 - Defining a new data type (e.g. `Dog`)?
-  - Put it in `Dog` companion object
+  - Put typeclass instances in `Dog` companion object
 - Defining a new typeclass (e.g. `Encoder`)?
   - Add instances for basic data types (Int, Double, String, etc) if it makes sense
 
@@ -302,11 +318,11 @@ spawnActors(myActorSystem)
 - Avoid using implicit conversions (`implicit def`) for automatically converting between concrete types
   - Code is harder to follow and diagnose
   - Use extension methods instead as it is more explicit
+- Use it for deriving typeclass instances generically (like `Encoder[List[A]]`)
 
 ## 4. Canonicalness of typeclass instances
 
 - Avoid creating multiple instances of the same typeclass for the same type
-  - A canonoical location for type instances (the companion object) helps enforce it
 - If you need multiple typeclass instances (e.g. Different JSON serialization to different clients)
   - Ideally, remove the `implicit` keyword to force the user to choose one explicitly
   - Write tests to catch any refactoring mistake causing a different implicit to be picked up
@@ -369,6 +385,7 @@ object Antique {
 ```scala
 object Antique {
   implicitly[Encoder[String]] // no error on this line
+  
   // Compile Error: could not find implicit value for
   //                parameter e: io.circe.Encoder[java.time.Year]
   implicitly[Encoder[Year]]
@@ -383,7 +400,6 @@ object Antique {
   - Can be used to provide fallback implementation 
 - Implicit classes 
   - Simpler syntax to define extension methods
-  - Allocation-free if implicit class extends `AnyVal`
 - [https://github.com/tek/splain](https://github.com/tek/splain)
   - Compiler plugin which logs the implicit search path and gives you more precisely what implicit is missing
 
@@ -393,3 +409,5 @@ object Antique {
   - Circe, circe-generics, doobie
 - [Profiling compile times](https://www.scala-lang.org/blog/2018/06/04/scalac-profiling.html)
   - Help diagnose compile time issues which are often caused by heavy use of implicits
+  
+## Questions?
