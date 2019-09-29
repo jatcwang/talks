@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>presentation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://revealjs.com/css/reset.css">
+  <link rel="stylesheet" href="https://revealjs.com/css/reveal.css">
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://revealjs.com/css/theme/white.css" id="theme">
+  <link rel="stylesheet" href="assets/style.css"/>
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'https://revealjs.com/css/print/pdf.css' : 'https://revealjs.com/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="https://revealjs.com/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section><section id="data-transformation" class="title-slide slide level1"><h1>Data transformation</h1><p>without hurting your eyes</p>
+<p><span style="font-size:22px;">Jacob Wang</span></p></section><section id="about-me" class="slide level2">
+<h2>About me</h2>
+<ul>
+<li class="fragment">Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
+<li class="fragment">Typed FP and other useful tools</li>
+<li class="fragment"><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
+</ul>
+</section><section id="data-transformation-1" class="slide level2">
+<h2>Data transformation</h2>
+<ul>
+<li class="fragment">As developers, we shuffle and transform data all day</li>
+<li class="fragment">Boring, boilerplatey, error prone?</li>
+<li class="fragment">Let’s look at 3 Scala libraries that sparks joy :)</li>
+</ul>
+</section><section id="scala" class="slide level2">
+<h2>Scala</h2>
+<ul>
+<li class="fragment"><strong>sealed traits</strong> and <strong>case classes</strong> are great for modeling domain data</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Employee</span>(name: String, age: Int)</span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">Employee</span>(<span class="st">&quot;Nat&quot;</span>, <span class="dv">30</span>).<span class="fu">copy</span>(name = <span class="st">&quot;Tat&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co">// res0: Employee = Employee(&quot;Tat&quot;, 30)</span></span></code></pre></div>
+</div>
+</section><section id="welcome-to-the-real-world" class="slide level2">
+<h2>Welcome to the real world</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Employee</span>(</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  id: EmployeeId,</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  firstName: String,</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  lastName: String,</span>
+<span id="cb2-5"><a href="#cb2-5"></a>  addresses: List[Address],</span>
+<span id="cb2-6"><a href="#cb2-6"></a>  dateOfBirth: LocalDate,</span>
+<span id="cb2-7"><a href="#cb2-7"></a>  <span class="co">// ...probably 10 other fields</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Address</span>(</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  streetNumber: String,</span>
+<span id="cb3-3"><a href="#cb3-3"></a>  line1: String,</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  line2: String,</span>
+<span id="cb3-5"><a href="#cb3-5"></a>  country: String,</span>
+<span id="cb3-6"><a href="#cb3-6"></a>  postCode: String,</span>
+<span id="cb3-7"><a href="#cb3-7"></a>  verified: Boolean</span>
+<span id="cb3-8"><a href="#cb3-8"></a>)</span></code></pre></div>
+<p>It can’t be that bad…right?</p>
+</section><section class="slide level2">
+
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">val</span> updatedEmployee = employee.<span class="fu">copy</span>(</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  addresses = employee.<span class="fu">addresses</span>.<span class="fu">map</span>(</span>
+<span id="cb4-3"><a href="#cb4-3"></a>    a =&gt; a.<span class="fu">copy</span>(verified = <span class="kw">true</span>)</span>
+<span id="cb4-4"><a href="#cb4-4"></a>  )</span>
+<span id="cb4-5"><a href="#cb4-5"></a>)</span></code></pre></div>
+<p>or worse…</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1"></a>employee.<span class="fu">copy</span>(</span>
+<span id="cb5-2"><a href="#cb5-2"></a>  company = employee.<span class="fu">company</span>.<span class="fu">copy</span>(</span>
+<span id="cb5-3"><a href="#cb5-3"></a>    address = employee.<span class="fu">company</span>.<span class="fu">address</span>.<span class="fu">copy</span>(</span>
+<span id="cb5-4"><a href="#cb5-4"></a>      street = employee.<span class="fu">company</span>.<span class="fu">address</span>.<span class="fu">street</span>.<span class="fu">copy</span>(</span>
+<span id="cb5-5"><a href="#cb5-5"></a>        name = employee.<span class="fu">company</span>.<span class="fu">address</span>.<span class="fu">street</span>.<span class="fu">name</span>.<span class="fu">capitalize</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>      )</span>
+<span id="cb5-7"><a href="#cb5-7"></a>    )</span>
+<span id="cb5-8"><a href="#cb5-8"></a>  )</span>
+<span id="cb5-9"><a href="#cb5-9"></a>)</span></code></pre></div>
+<p>Can we do better?</p>
+</section></section>
+<section><section id="quicklens" class="title-slide slide level1"><h1>Quicklens</h1><ul>
+<li class="fragment">Update deeply nested immutable data effortlessly</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">import</span> com.<span class="fu">softwaremill</span>.<span class="fu">quicklens</span>._</span>
+<span id="cb6-2"><a href="#cb6-2"></a>employee.<span class="fu">modify</span>(_.<span class="fu">addresses</span>.<span class="fu">each</span>.<span class="fu">country</span>).<span class="fu">setTo</span>(<span class="st">&quot;Kingdom&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">// res2: Employee = Employee(</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">//   EmployeeId(&quot;id1&quot;),</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">//   &quot;Hope&quot;,</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">//   &quot;Atkins&quot;,</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co">//   List(</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">//     Address(&quot;15&quot;, &quot;Candy Lane&quot;, &quot;&quot;, &quot;Kingdom&quot;, &quot;3333&quot;, false),</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">//     Address(&quot;50&quot;, &quot;Donut St&quot;, &quot;&quot;, &quot;Kingdom&quot;, &quot;3333&quot;, false)</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">//   ),</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">//   1985-04-01</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">// )</span></span></code></pre></div>
+</div></section><section id="more-quicklens" class="slide level3">
+<h3>More quicklens</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> Animal</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Dog</span>(age: Int) <span class="kw">extends</span> Animal</span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Cat</span>(ages: List[Int]) <span class="kw">extends</span> Animal</span>
+<span id="cb7-4"><a href="#cb7-4"></a></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Zoo</span>(animals: List[Animal])</span>
+<span id="cb7-6"><a href="#cb7-6"></a></span>
+<span id="cb7-7"><a href="#cb7-7"></a><span class="kw">val</span> zoo = <span class="fu">Zoo</span>(List(<span class="fu">Dog</span>(<span class="dv">4</span>), <span class="fu">Cat</span>(List(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>))))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">val</span> olderZoo = zoo.<span class="fu">modifyAll</span>(</span>
+<span id="cb8-2"><a href="#cb8-2"></a>  _.<span class="fu">animals</span>.<span class="fu">each</span>.<span class="fu">when</span>[Dog].<span class="fu">age</span>,</span>
+<span id="cb8-3"><a href="#cb8-3"></a>  _.<span class="fu">animals</span>.<span class="fu">each</span>.<span class="fu">when</span>[Cat].<span class="fu">ages</span>.<span class="fu">at</span>(<span class="dv">0</span>)</span>
+<span id="cb8-4"><a href="#cb8-4"></a>).<span class="fu">using</span>(_ + <span class="dv">1</span>)</span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="co">// olderZoo: Zoo = Zoo(List(Dog(5), Cat(List(2, 2, 3, 4, 5, 6, 7, 8, 9))))</span></span></code></pre></div>
+<p>… and support for more types like <strong>Either</strong> and <strong>Map</strong>!</p>
+</section><section id="transforming-to-similar-structures" class="slide level2">
+<h2>Transforming to similar structures</h2>
+<ul>
+<li class="fragment">We create a new case class <strong>EmployeeV2</strong> with some extra fields</li>
+<li class="fragment">Want code to operate mostly on EmployeeV2
+<ul>
+<li class="fragment">Need a function <strong>Employee</strong> =&gt; <strong>EmployeeV2</strong></li>
+</ul></li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">def</span> <span class="fu">toEmployeeV2</span>(em: Employee): EmployeeV2 = {</span>
+<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">EmployeeV2</span>(</span>
+<span id="cb9-3"><a href="#cb9-3"></a>    id = employee.<span class="fu">id</span>,</span>
+<span id="cb9-4"><a href="#cb9-4"></a>    firstName = employee.<span class="fu">firstName</span>,</span>
+<span id="cb9-5"><a href="#cb9-5"></a>    lastName = employee.<span class="fu">lastName</span>,</span>
+<span id="cb9-6"><a href="#cb9-6"></a>    addresses = employee.<span class="fu">addresses</span>,</span>
+<span id="cb9-7"><a href="#cb9-7"></a>    dateOfBirth = employee.<span class="fu">dateOfBirth</span>,</span>
+<span id="cb9-8"><a href="#cb9-8"></a>    level = <span class="fu">calculateLevel</span>(),</span>
+<span id="cb9-9"><a href="#cb9-9"></a>  )</span>
+<span id="cb9-10"><a href="#cb9-10"></a>}</span></code></pre></div>
+</div>
+</section></section>
+<section><section id="chimney" class="title-slide slide level1"><h1>Chimney</h1><ul>
+<li class="fragment">Boilerplate-free data transformation</li>
+<li class="fragment">Transform from one case class / sealed trait to another, mapping fields by name and type</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">import</span> io.<span class="fu">scalaland</span>.<span class="fu">chimney</span>.<span class="fu">dsl</span>._</span>
+<span id="cb10-2"><a href="#cb10-2"></a></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="kw">val</span> employeeV2 = employee.<span class="fu">into</span>[EmployeeV2]</span>
+<span id="cb10-4"><a href="#cb10-4"></a>  .<span class="fu">withFieldComputed</span>(_.<span class="fu">level</span>, _ =&gt; <span class="fu">calculateLevel</span>())</span>
+<span id="cb10-5"><a href="#cb10-5"></a>  .<span class="fu">transform</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="co">// employeeV2: EmployeeV2 = EmployeeV2(</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="co">//   EmployeeId(&quot;id1&quot;),</span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="co">//   &quot;Hope&quot;,</span></span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="co">//   &quot;Atkins&quot;,</span></span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="co">//   List(</span></span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="co">//     Address(&quot;15&quot;, &quot;Candy Lane&quot;, &quot;&quot;, &quot;United Kingdom&quot;, &quot;3333&quot;, false),</span></span>
+<span id="cb10-12"><a href="#cb10-12"></a><span class="co">//     Address(&quot;50&quot;, &quot;Donut St&quot;, &quot;&quot;, &quot;United Kingdom&quot;, &quot;3333&quot;, false)</span></span>
+<span id="cb10-13"><a href="#cb10-13"></a><span class="co">//   ),</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a><span class="co">//   1985-04-01,</span></span>
+<span id="cb10-15"><a href="#cb10-15"></a><span class="co">//   3</span></span>
+<span id="cb10-16"><a href="#cb10-16"></a><span class="co">// )</span></span></code></pre></div>
+</div>
+<div class="fragment">
+<p>If we forgot to provide value for a missing field…</p>
+<pre><code>level: scala.Int - no accessor named level in source type repl.Session.App1.Employee</code></pre>
+</div></section><section id="more-chimney-transformations" class="slide level2">
+<h2>More Chimney transformations!</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(id: String, firstName: String, lastName: String, years: Int)</span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">UserV2</span>(id: String, name: String, age: Int, extraInfo: String)</span>
+<span id="cb12-3"><a href="#cb12-3"></a></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="kw">val</span> userV1 = <span class="fu">User</span>(<span class="st">&quot;user1&quot;</span>, <span class="st">&quot;John&quot;</span>, <span class="st">&quot;Doe&quot;</span>, <span class="dv">10</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1"></a>userV1.<span class="fu">into</span>[UserV2]</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  .<span class="fu">withFieldComputed</span>(_.<span class="fu">name</span>, u =&gt; s<span class="st">&quot;${u.firstName} ${u.lastName}&quot;</span>)</span>
+<span id="cb13-3"><a href="#cb13-3"></a>  .<span class="fu">withFieldRenamed</span>(_.<span class="fu">years</span>, _.<span class="fu">age</span>)</span>
+<span id="cb13-4"><a href="#cb13-4"></a>  .<span class="fu">withFieldConst</span>(_.<span class="fu">extraInfo</span>, <span class="st">&quot;&quot;</span>)</span>
+<span id="cb13-5"><a href="#cb13-5"></a>  .<span class="fu">transform</span></span>
+<span id="cb13-6"><a href="#cb13-6"></a><span class="co">// res3: UserV2 = UserV2(&quot;user1&quot;, &quot;John Doe&quot;, 10, &quot;&quot;)</span></span></code></pre></div>
+</section><section id="time-to-test-your-code" class="slide level2">
+<h2>Time to test your code!</h2>
+<ul>
+<li class="fragment">You found a bug</li>
+<li class="fragment">But the test failure looks like this</li>
+</ul>
+<div class="fragment">
+<pre><code>EmployeeV2(EmployeeId(id1),Hope,Atkins,Address(15,Doe St,,United Kingdom,3333),1985-04-01,0) was not equal to EmployeeV2(EmployeeId(id1),Hope,Atkins,Address(15,Doe St,,United Kingdom,3333),1985-04-01,3)</code></pre>
+</div>
+</section></section>
+<section><section id="diffx" class="title-slide slide level1"><h1>Diffx</h1><ul>
+<li class="fragment">Human-readable data diffs</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb15"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">class</span> EmployeeSpec <span class="kw">extends</span> WordSpec <span class="kw">with</span> Matchers <span class="kw">with</span> DiffMatcher {</span>
+<span id="cb15-2"><a href="#cb15-2"></a>  <span class="st">&quot;some test&quot;</span> in {</span>
+<span id="cb15-3"><a href="#cb15-3"></a>    <span class="kw">val</span> actual = <span class="fu">toEmployeeV2</span>(employeeV1)</span>
+<span id="cb15-4"><a href="#cb15-4"></a>    actual should <span class="fu">matchTo</span>(employeeV2)</span>
+<span id="cb15-5"><a href="#cb15-5"></a>  }</span>
+<span id="cb15-6"><a href="#cb15-6"></a>}</span></code></pre></div>
+</div>
+<div class="fragment">
+<p><img data-src="./assets/images/diffx_failure.jpg" /></p>
+</div></section><section id="diffx-features" class="slide level2">
+<h2>Diffx features</h2>
+<ul>
+<li class="fragment">Diff case classes and standard library types</li>
+<li class="fragment">Add support to your own types/libraries by implementing typeclass instances</li>
+</ul>
+</section><section id="summary" class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li class="fragment"><a href="https://github.com/softwaremill/quicklens">Quicklens</a> for deep immutable updates (or <a href="https://julien-truffaut.github.io/Monocle">Monocle</a> + <a href="https://github.com/kenbot/goggles">Goggles</a>)</li>
+<li class="fragment"><a href="https://github.com/scalalandio/chimney">Chimney</a> for transforming data of similar structure</li>
+<li class="fragment"><a href="https://github.com/softwaremill/diffx">Diffx</a> for readable test failures</li>
+</ul>
+</section><section id="thank-you" class="slide level2">
+<h2>Thank you!</h2>
+<p><img src="./assets/images/cat.jpg" style="margin: 0; height: 500px;"/></p>
+</section></section>
+    </div>
+  </div>
+
+  <script src="https://revealjs.com/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'https://revealjs.com/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'https://revealjs.com/plugin/zoom-js/zoom.js', async: true },
+          { src: 'https://revealjs.com/plugin/math/math.js', async: true },
+          { src: 'https://revealjs.com/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
