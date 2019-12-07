@@ -1,10 +1,9 @@
-
 # Adventures in type-safe error handling
 
 ## About me
 
 - Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/>
-- Typed FP and other useful tools
+- Types, FP and other tools that make me more productive
 - @jatcwang
 
 ## Error handling - A whirlwind tour
@@ -12,7 +11,8 @@
 ## Either[+E, +A]
 
 * Use any error type you want!
-* Covariant - Compiler will find **Least Upper Bound** (LUB) to make the error type converge
+
+<div class="fragment">
 
 ```scala mdoc:silent
 sealed trait AllErrors extends Throwable
@@ -32,12 +32,16 @@ val result: Either[AllErrors, Unit] =
   } yield ()
 ```
 
-## IO[A] / Future[A]
+</div>
 
-<span style="font-style: italic">"Errors? What errors? **Explodes**"</span>
+* Covariant - Compiler will find **Least Upper Bound** (LUB) to make the error type converge
+
+## Cats IO[A] / Future[A]
 
 * Any **IO[A]** can fail with a **Throwable**
 * Have to rely on documentation, not types
+
+<div class="fragment">
 
 ```scala mdoc:invisible
 import cats.effect.IO
@@ -53,10 +57,13 @@ val ioResult: IO[Unit] =
   } yield ()
 ```
 
-## EitherT
+</div>
 
-* Similar to **IO[Either[E, A]]** but "short-circuits" when you have a `Left`
-* Invariant - no auto upcasting but you can use `leftWiden`
+## EitherT[IO, E, A]
+
+Similar to **IO[Either[E, A]]** but "short-circuits" when you have a `Left`
+
+<div class="fragment">
 
 ```scala mdoc:invisible
 import cats.data.EitherT
@@ -74,53 +81,251 @@ val eitherTResult: EitherT[IO, AllErrors, Unit] =
   } yield ()
 ```
 
+</div>
+
+* Invariant - no auto upcasting but you can use `leftWiden`
+* Still have IO's hidden (Throwable) way to terminate the execution
+
 ## ZIO[-R, +E, +A]
 
+::: nonincremental
+
+<div class="fragment">
+
 * Similar to EitherT, but better ergonomic
-* Can terminate the fibre with a `Throwable` ("Die")
+* Can terminate the execution chain with a `Throwable` ("Die")
+
+</div>
+
+:::
+
+<div class="fragment">
+
+```scala mdoc:reset:invisible
+import zio._
+import com.example.Example._
+```
+
+```scala mdoc:compile-only
+// Note, this is ZIO's bifucntor IO, not cats.effect.IO
+def zio1: IO[E1, Unit] = ???
+def zio2: IO[E2, Unit] = ???
+
+val eitherTResult: IO[AllErrors, Unit] = 
+  for {
+    _ <- zio1
+    _ <- zio2
+  } yield ()
+```
+
+</div>
 
 ## Java Checked Exceptions!
-
-* Compiler enforced error handling
-* Exhaustive handling (like sealed traits)
-* **Partial Handling** - handle what you can, let the rest bubble up
 
 ---
 
 ```java
-void doA() throws Err1 { ... }
+void method1() throws E1 { ... }
 
-void doB() throws Err2 { ... }
+void method2() throws E2 { ... }
 
-void doAThenBPartial() throws Err2 { // Err2 not handled, must declare!
+void onlyE1Handled() throws E2 { // E2 not handled, must declare!
   try {
-    doA();
-    doB();
+    method1();
+    method2();
   } 
-  catch (Err1 e1) { ... }
+  catch (E1 e1) { ... }
 }
 
-void doAThenB() { // All errors handled!
+void allHandled() { // All errors handled!
   try {
-    doA();
-    doB();
+    method1();
+    method2();
   } 
-  catch (Err1 e1) { ... }
-  catch (Err2 e2) { ... }
+  catch (E1 e1) { ... }
+  catch (E2 e2) { ... }
 }
 
 ```
+
+## The trouble with checked exceptions
+
+* Not available in Scala 🙃
+* Errors are not return values. Doesn't compose well with libraries (Java 8 streams / lambdas)
+* Type system special case - no abstraction or reuse
+
+## But it has many cool ideas too
+
+- Exhaustive handling 
+- Partial handling
+- Open union of errors
+- Can we have these in Scala?
 
 ```scala mdoc:reset:invisible
 val v = 1
 ```
 
-## The trouble with checked exceptions
+## Shapeless Coproduct!
 
-* Errors are not return values. Doesn't compose well with libraries (Java 8 streams / lambdas)
-* Type system special case - no abstraction or reuse
-* Not available in Scala 🙃
-* Still, **partial handling** can be great!
+<div class="fragment">
+
+```scala mdoc:invisible
+sealed trait MyError
+final case class E1() extends MyError
+final case class E2() extends MyError
+final case class E3() extends MyError
+```
+
+```scala mdoc
+import shapeless._
+type E12 = E1 :+: E2 :+: CNil
+// Similar to Either[E1, Either[E2, CNil]]
+
+import shapeless.syntax.inject._
+
+val e1InE12: E1 :+: E2 :+: CNil = E1().inject[E1 :+: E2 :+: CNil]
+val e2InE12: E1 :+: E2 :+: CNil = E2().inject[E1 :+: E2 :+: CNil]
+
+e1InE12 match {
+  case Inl(E1()) => println("it's E1!")
+  case Inr(Inl(E2())) => println("it's E2!")
+  case Inr(Inr(cnil)) => cnil.impossible // To satisfy exhaustiveness check
+}
+```
+
+</div>
+
+## Coproducts are flexible!
+
+- E.g. Extract particular cases from a coproduct!
+
+```scala mdoc
+import shapeless.ops.coproduct._
+
+// Returns a Left(E1()) if we have an E1
+Remove[E1 :+: E2 :+: CNil, E1].apply(e1InE12)
+
+// Otherwise return the rest in Right(..)
+Remove[E1 :+: E2 :+: CNil, E1].apply(e2InE12)
+```
+
+## Hotpotato
+
+A library for type-safe, ergonomic and readable error handling!
+
+## First, a bit of simplification
+
+Coproducts can be a bit tedious to read and write, so Hotpotato provides some type aliases for coproducts
+
+```scala mdoc
+import hotpotato._
+
+type ErrorsSimple = OneOf3[E1, E2, E3] // is equivalent to E1 :+: E2 :+: E3 :+: CNil
+```
+
+## Handling errors - exhaustive
+
+> * Convert all errors into one single type 
+> * **OR** each to its own type
+
+```scala mdoc:invisible
+case class X1()
+case class X2()
+```
+
+```scala mdoc:compile-only
+import hotpotato._
+import shapeless.syntax.inject._
+import zio._
+
+val io: IO[OneOf3[E1, E2, E3], Unit] = IO.fail(E1().inject[OneOf3[E1, E2, E3]])
+
+// Turn every error into String
+val resString: IO[String, Unit] = io.mapErrorAllInto(
+  (e1: E1) => "e1",
+  (e2: E2) => "e2",
+  (e3: E3) => "e3",
+)
+
+// Turn every error into some other type
+val result: IO[OneOf2[X2, X1], Unit] = io.mapErrorAll(
+  (e1: E1) => X1(),
+  (e2: E2) => X2(),
+  (e3: E3) => X1(),
+)
+```
+
+## Handling errors - partial
+
+```scala mdoc:reset:invisible
+import com.example.Example._
+import zio._
+```
+
+```scala mdoc:compile-only
+import hotpotato._
+
+val ioE123: IO[OneOf3[E1, E2, E3], String] = ???
+
+// Turn some error into String
+val result: IO[OneOf3[String, Int, E3], String] = ioE123.mapErrorSome(
+  (e1: E1) => "e1",
+  (e2: E2) => 12,
+)
+```
+
+## Effectful Error handling
+
+Very often error recovery/handling requires side-effect (e.g. logging)
+
+```scala mdoc:compile-only
+import hotpotato._
+
+val ioE123: IO[OneOf3[E1, E2, E3], String] = ???
+val fallbackIO: E1 => IO[Int, String] = ???
+
+val result: IO[OneOf3[Int, E2, E3], String] = ioE123.flatMapErrorSome(
+  (e1: E1) => fallbackIO(e1),
+)
+```
+
+<div class="fragment">
+**flatMapErrorAll**, **flatMapErrorAllInto** are provided for exhaustive handling too
+</div>
+
+## Combining errors
+
+We often have a series of steps and each step may have different errors
+
+```scala mdoc:compile-only
+import hotpotato._
+
+val ioE1: IO[E1, Unit] = ???
+val ioE23: IO[OneOf2[E2, E3], Unit] = ???
+
+// An embedder tells the compiler what types we want all errors to embed to
+implicit val embedder: Embedder[OneOf3[E1, E2, E3]] = Embedder.make
+
+val result: IO[OneOf3[E1, E2, E3], Unit] = for {
+  _ <- ioE1.embedError
+  _ <- ioE23.embedError
+} yield ()
+```
+
+## Interfacing with sealed trait errors
+
+Easy conversion from/to sealed traits
+
+```scala mdoc:compile-only
+import hotpotato._
+
+// Recall that E1, E2 and E3 all extends AllErrors
+val ioAllErrors: IO[AllErrors, String] = ???
+
+val ioE123: IO[OneOf3[E1, E2, E3], String] = ioAllErrors.errorAsCoproduct
+
+val ioAllErrorsAgain: IO[AllErrors, String] = ioE123.unifyError
+```
 
 ## Summary
 
@@ -149,11 +354,36 @@ val v = 1
   }
   
   .hmm {
-    background-image: url("assets/images/sweat_emoji.svg");
+    background-image: url("assets/images/emoji_sweat.svg");
     background-position: center;
-    background-size: 23px;
+    background-size: 27px;
     background-repeat: no-repeat;
   }
+  
+  .emb {
+    background-image: url("assets/images/emoji_embarrased.svg");
+    background-position: center;
+    background-size: 27px;
+    background-repeat: no-repeat;
+  }
+  
+  .no-box .sourceCode {
+    box-shadow: none!important;
+  }
+  
+  .no-box img {
+    box-shadow: none!important;
+  }
+  
+  .figure img {
+    margin: 0!important;
+    overflow: hidden;
+  }
+  
+  .figure p {
+    margin: 0!important;;
+  }
+  
 </style>
 
 <table class="text-centered">
@@ -163,6 +393,7 @@ val v = 1
           <td class="dark">ChckEx</td>
           <td class="dark">EitherT</td>
           <td class="dark">ZIO</td>
+          <td class="dark">Hotpotato</td>
         </tr>
     </thead>
     <tbody>
@@ -171,15 +402,18 @@ val v = 1
           <td class="no"></td>
           <td class="yes"></td>
           <td class="yes"></td>
+          <td class="yes"></td>
         </tr>
         <tr>
           <td class="dark">Error Type Unification</td>
           <td class="yes"></td>
-          <td class="hmm"></td>
+          <td class="emb"></td>
           <td class="yes"></td>
+          <td class="hmm"></td>
         </tr>
         <tr>
           <td class="dark">Handling - Exhaustive</td>
+          <td class="yes"></td>
           <td class="yes"></td>
           <td class="yes"></td>
           <td class="yes"></td>
@@ -189,169 +423,80 @@ val v = 1
           <td class="yes"></td>
           <td class="no"></td>
           <td class="no"></td>
+          <td class="yes"></td>
         </tr>
     </tbody>
 </table>
 
 
+## It's just the beginning!
 
+::: nonincremental
 
+* Hotpotato is available now!
+* Your ideas, feedback and use cases are welcome!
+* Docs: [jatcwang.github.io/hotpotato/]([https://jatcwang.github.io/hotpotato/])
+* Gitter: [jatcwang.github.io/hotpotato/]([https://jatcwang.github.io/hotpotato/])
 
+:::
 
+## Thank you!
 
+## Why sealed trait isn't enough
 
+Let's look at an example
 
-## What is a good error interface?
+<div class="fragment">
+    <div class="figure no-box" style="height: 335px; ">
+        <img class="no-box" width="600px" src="assets/images/callgraph_simple.svg" />
+    </div>
+</div>
 
-- "Just enough errors, but not too much"
-- Right answer depends on context!
+<div class="fragment">
+How should we model the errors for **B1** and **B2**?
+</div>
 
-## What does our API consumers want?
+---
 
-- "What can go wrong that I need to think about"?
-- Show them errors they might want to handle
-- Don't bother them with anything they cannot deal with
-- **Semantic** vs **Operational/Implementation**
+<div class="figure no-box" style="height: 280px; ">
+    <img class="no-box" width="600px" src="assets/images/callgraph_simple.svg" />
+</div>
 
-## What do we want from our error handling technique?
+<div class="no-box">
 
-- Exhaustiveness
-- Partial handling
-- Good ergonomics and error message
-- Share code / error definitions
-- Performance
+```scala mdoc:compile-only
+sealed trait B1Errors
+sealed trait B2Errors
 
-## Our Example Scenario
+case class Conflict() extends B1Errors with B2Errors
+case class NotFound() extends B1Errors
+case class Unauthorized() extends B2Errors
+```
+</div>
 
-- A service that can create and fetch users (via network calls)
-- Failure cases:
-  - **User creation**: Clashing user name or unauthorized/not found
-  - **Fetch user**: User not found, or unauthorized/not found
+---
 
-```scala mdoc:invisible
-type UserId = String
-case class User(id: UserId, name: String)
-case class UserData(name: String)
+```scala mdoc:compile-only
+sealed trait B1Errors
+sealed trait B2Errors
+
+case class Conflict() extends B1Errors with B2Errors
+case class NotFound() extends B1Errors
+case class Unauthorized() extends B2Errors
 ```
 
-```scala mdoc:silent
-sealed trait UserServiceError
-final case class Unauthorized() extends UserServiceError
-final case class UserNotFound() extends UserServiceError
-final case class UserAlreadyExists() extends UserServiceError
- ```
+::: nonincremental
 
-```scala mdoc:silent
-import zio._
-trait UserService {
-  def createUser(userData: UserData): IO[UserServiceError, UserId]
-  def getUser: IO[UserServiceError, User]
-}
-```
+<ul>
+  <li class="fragment">Error class declaration now need to be in the same file</li>
+  <li class="fragment">You cannot use these error classes in another error hierarchy</li>
+  <li class="fragment">We want:
+    <ul>
+      <li>Exhaustive matching</li>
+      <li>Partial elimination</li>
+      <li>Use types we don't own</li>
+    </ul>
+  </li>
+</ul>
 
-```scala
-def createUser(userData: UserData): IO[ServiceError, UserId] = {
-  for {
-    _ <- checkPermissions // IO[Unauthorized, Unit]
-    newUser <- insertUserIntoDb // IO[UserAlreadyExists, User]
-  } yield newUser
-}
-```
-
-## The problem with sealed traits
-
-- Choose one:
-  - Mispresent whaterrors can actually happen
-  - Code repetition ==> Boilerplate, hard to reuse code
-- No partial handling
-
-```scala mdoc:silent
-sealed trait CreateUserErrors
-
-object CreateUserErrors {
-  final case class Unauthorized() extends CreateUserErrors
-  final case class UserAlreadyExists() extends CreateUserErrors
-}
-
-sealed trait FetchUserErrors
-object FetchUserErrors {
-  final case class Unauthorized() extends FetchUserErrors
-  final case class UserNotFound() extends FetchUserErrors
-}
-```
-
-## Java checked exceptions
-
-- Handle the error, or let it bubble up (enforced)
-- First class, but non-composeable
-- Akward interactions with closures leads to unwieldly code
-  when using with future, streams and others
-
-## What we want
-
-- Freely combine existing error classes
-- Exhaustiveness
-- Allow handling only a subset of errors
-
-```scala
-// Dotty / Scala 3
-def createUser(userData: UserData): IO[Unauthorized | UserAlreadyExists, UserId] = {
-  for {
-    _ <- checkPermissions // IO[Unauthorized, Unit]
-    newUser <- insertUserIntoDb // IO[UserAlreadyExists, User]
-  } yield newUser
-}
-```
-
-## Shapeless Coproduct!
-
-```scala mdoc:invisible
-sealed trait MyError
-final case class E1() extends MyError
-final case class E2() extends MyError
-final case class E3() extends MyError
-```
-
-```scala mdoc
-import shapeless._
-type E12 = E1 :+: E2 :+: CNil
-// Similar to Either[E1, Either[E2, CNil]]
-
-import shapeless.syntax.inject._
-
-val e1InE12: E12 = E1().inject[E12]
-val e2InE12: E12 = E2().inject[E12]
-
-e1InE12 match {
-  case Inl(E1()) => println("it's E1!")
-  case Inr(Inl(E2())) => println("it's E2!")
-  case Inr(Inr(cnil)) => cnil.impossible // To satisfy exhaustiveness check
-}
-```
-
-## Coproduct is cool!
-
-- Combine small coproducts into larger ones
-- Extract particular cases in a coproduct, leaving behind unhandled cases
-
-```scala mdoc
-import shapeless.ops.coproduct._
-
-Remove[E12, E1].apply(e1InE12)
-Remove[E12, E1].apply(e2InE12)
-
-Basis[E1 :+: E2 :+: E3 :+: CNil, E12].inverse(Right(e2InE12))
-```
-
-## Introducing Hotpotato
-
-## References
-
-FIXME
-- Luke's bifunctor IO blog post
-
-## FIXME
-
-- Error combination
-- Partial handling and transformation
-- Exhaustive matching
+:::
