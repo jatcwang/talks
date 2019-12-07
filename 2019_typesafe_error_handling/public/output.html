@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>presentation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://revealjs.com/css/reset.css">
+  <link rel="stylesheet" href="https://revealjs.com/css/reveal.css">
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://revealjs.com/css/theme/white.css" id="theme">
+  <link rel="stylesheet" href="assets/style.css"/>
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'https://revealjs.com/css/print/pdf.css' : 'https://revealjs.com/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="https://revealjs.com/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section><section id="adventures-in-type-safe-error-handling" class="title-slide slide level1"><h1>Adventures in type-safe error handling</h1></section><section id="about-me" class="slide level2">
+<h2>About me</h2>
+<ul>
+<li class="fragment">Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
+<li class="fragment">Typed FP and other useful tools</li>
+<li class="fragment"><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
+</ul>
+</section><section id="error-handling---a-whirlwind-tour" class="slide level2">
+<h2>Error handling - A whirlwind tour</h2>
+</section><section id="eithere-a" class="slide level2">
+<h2>Either[+E, +A]</h2>
+<ul>
+<li class="fragment">Use any error type you want!</li>
+<li class="fragment">Covariant - Compiler will find <strong>Least Upper Bound</strong> (LUB) to make the error type converge</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> AllErrors <span class="kw">extends</span> Throwable</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">E1</span>() <span class="kw">extends</span> AllErrors</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">E2</span>() <span class="kw">extends</span> AllErrors</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">E3</span>() <span class="kw">extends</span> AllErrors</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> maybeError1: Either[E1, Unit] = ???</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">def</span> maybeError2: Either[E2, Unit] = ???</span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="kw">val</span> result: Either[AllErrors, Unit] = </span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="kw">for</span> {</span>
+<span id="cb2-6"><a href="#cb2-6"></a>    _ &lt;- maybeError1</span>
+<span id="cb2-7"><a href="#cb2-7"></a>    _ &lt;- maybeError2</span>
+<span id="cb2-8"><a href="#cb2-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
+</section><section id="ioa-futurea" class="slide level2">
+<h2>IO[A] / Future[A]</h2>
+<p><span style="font-style: italic">“Errors? What errors? <strong>Explodes</strong>”</span></p>
+<ul>
+<li class="fragment">Any <strong>IO[A]</strong> can fail with a <strong>Throwable</strong></li>
+<li class="fragment">Have to rely on documentation, not types</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">def</span> io1: IO[Unit] = ???</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw">def</span> io2: IO[Unit] = ???</span>
+<span id="cb3-3"><a href="#cb3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="kw">val</span> ioResult: IO[Unit] = </span>
+<span id="cb3-5"><a href="#cb3-5"></a>  <span class="kw">for</span> {</span>
+<span id="cb3-6"><a href="#cb3-6"></a>    _ &lt;- io1</span>
+<span id="cb3-7"><a href="#cb3-7"></a>    _ &lt;- io2</span>
+<span id="cb3-8"><a href="#cb3-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
+</section><section id="eithert" class="slide level2">
+<h2>EitherT</h2>
+<ul>
+<li class="fragment">Similar to <strong>IO[Either[E, A]]</strong> but “short-circuits” when you have a <code>Left</code></li>
+<li class="fragment">Invariant - no auto upcasting but you can use <code>leftWiden</code></li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">def</span> et1: EitherT[IO, E1, Unit] = ???</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">def</span> et2: EitherT[IO, E2, Unit] = ???</span>
+<span id="cb4-3"><a href="#cb4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">val</span> eitherTResult: EitherT[IO, AllErrors, Unit] = </span>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="kw">for</span> {</span>
+<span id="cb4-6"><a href="#cb4-6"></a>    _ &lt;- et1.<span class="fu">leftWiden</span>[AllErrors]</span>
+<span id="cb4-7"><a href="#cb4-7"></a>    _ &lt;- et2.<span class="fu">leftWiden</span>[AllErrors]</span>
+<span id="cb4-8"><a href="#cb4-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
+</section><section id="zio-r-e-a" class="slide level2">
+<h2>ZIO[-R, +E, +A]</h2>
+<ul>
+<li class="fragment">Similar to EitherT, but better ergonomic</li>
+<li class="fragment">Can terminate the fibre with a <code>Throwable</code> (“Die”)</li>
+</ul>
+</section><section id="java-checked-exceptions" class="slide level2">
+<h2>Java Checked Exceptions!</h2>
+<ul>
+<li class="fragment">Compiler enforced error handling</li>
+<li class="fragment">Exhaustive handling (like sealed traits)</li>
+<li class="fragment"><strong>Partial Handling</strong> - handle what you can, let the rest bubble up</li>
+</ul>
+</section><section class="slide level2">
+
+<div class="sourceCode" id="cb5"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb5-1"><a href="#cb5-1"></a><span class="dt">void</span> <span class="fu">doA</span>() <span class="kw">throws</span> Err1 { <span class="kw">... </span>}</span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="dt">void</span> <span class="fu">doB</span>() <span class="kw">throws</span> Err2 { <span class="kw">... </span>}</span>
+<span id="cb5-4"><a href="#cb5-4"></a></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="dt">void</span> <span class="fu">doAThenBPartial</span>() <span class="kw">throws</span> Err2 { <span class="co">// Err2 not handled, must declare!</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>  <span class="kw">try</span> {</span>
+<span id="cb5-7"><a href="#cb5-7"></a>    <span class="fu">doA</span>();</span>
+<span id="cb5-8"><a href="#cb5-8"></a>    <span class="fu">doB</span>();</span>
+<span id="cb5-9"><a href="#cb5-9"></a>  } </span>
+<span id="cb5-10"><a href="#cb5-10"></a>  <span class="kw">catch</span> (Err1 e1) { <span class="kw">... </span>}</span>
+<span id="cb5-11"><a href="#cb5-11"></a>}</span>
+<span id="cb5-12"><a href="#cb5-12"></a></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="dt">void</span> <span class="fu">doAThenB</span>() { <span class="co">// All errors handled!</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a>  <span class="kw">try</span> {</span>
+<span id="cb5-15"><a href="#cb5-15"></a>    <span class="fu">doA</span>();</span>
+<span id="cb5-16"><a href="#cb5-16"></a>    <span class="fu">doB</span>();</span>
+<span id="cb5-17"><a href="#cb5-17"></a>  } </span>
+<span id="cb5-18"><a href="#cb5-18"></a>  <span class="kw">catch</span> (Err1 e1) { <span class="kw">... </span>}</span>
+<span id="cb5-19"><a href="#cb5-19"></a>  <span class="kw">catch</span> (Err2 e2) { <span class="kw">... </span>}</span>
+<span id="cb5-20"><a href="#cb5-20"></a>}</span></code></pre></div>
+</section><section id="the-trouble-with-checked-exceptions" class="slide level2">
+<h2>The trouble with checked exceptions</h2>
+<ul>
+<li class="fragment">Errors are not return values. Doesn’t compose well with libraries (Java 8 streams / lambdas)</li>
+<li class="fragment">Type system special case - no abstraction or reuse</li>
+<li class="fragment">Not available in Scala 🙃</li>
+<li class="fragment">Still, <strong>partial handling</strong> can be great!</li>
+</ul>
+</section><section id="summary" class="slide level2">
+<h2>Summary</h2>
+<style>
+.dark {
+background-color: darkgrey;
+}
+.bold {
+font-weight: bold;
+}
+.text-centered td {
+text-align: center!important;
+}
+.yes:after {
+content: '✓';
+font-weight: bold;
+color: green;
+}
+.no:after {
+content: '⨯';
+color: red;
+}
+.hmm {
+background-image: url("assets/images/sweat_emoji.svg");
+background-position: center;
+background-size: 23px;
+background-repeat: no-repeat;
+}
+</style>
+<table class="text-centered">
+<thead>
+<tr>
+<td>
+</td>
+<td class="dark">
+ChckEx
+</td>
+<td class="dark">
+EitherT
+</td>
+<td class="dark">
+ZIO
+</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="dark">
+Composable
+</td>
+<td class="no">
+</td>
+<td class="yes">
+</td>
+<td class="yes">
+</td>
+</tr>
+<tr>
+<td class="dark">
+Error Type Unification
+</td>
+<td class="yes">
+</td>
+<td class="hmm">
+</td>
+<td class="yes">
+</td>
+</tr>
+<tr>
+<td class="dark">
+Handling - Exhaustive
+</td>
+<td class="yes">
+</td>
+<td class="yes">
+</td>
+<td class="yes">
+</td>
+</tr>
+<tr>
+<td class="dark">
+Handling - Partial
+</td>
+<td class="yes">
+</td>
+<td class="no">
+</td>
+<td class="no">
+</td>
+</tr>
+</tbody>
+</table>
+</section><section id="what-is-a-good-error-interface" class="slide level2">
+<h2>What is a good error interface?</h2>
+<ul>
+<li class="fragment">“Just enough errors, but not too much”</li>
+<li class="fragment">Right answer depends on context!</li>
+</ul>
+</section><section id="what-does-our-api-consumers-want" class="slide level2">
+<h2>What does our API consumers want?</h2>
+<ul>
+<li class="fragment">“What can go wrong that I need to think about”?</li>
+<li class="fragment">Show them errors they might want to handle</li>
+<li class="fragment">Don’t bother them with anything they cannot deal with</li>
+<li class="fragment"><strong>Semantic</strong> vs <strong>Operational/Implementation</strong></li>
+</ul>
+</section><section id="what-do-we-want-from-our-error-handling-technique" class="slide level2">
+<h2>What do we want from our error handling technique?</h2>
+<ul>
+<li class="fragment">Exhaustiveness</li>
+<li class="fragment">Partial handling</li>
+<li class="fragment">Good ergonomics and error message</li>
+<li class="fragment">Share code / error definitions</li>
+<li class="fragment">Performance</li>
+</ul>
+</section><section id="our-example-scenario" class="slide level2">
+<h2>Our Example Scenario</h2>
+<ul>
+<li class="fragment">A service that can create and fetch users (via network calls)</li>
+<li class="fragment">Failure cases:
+<ul>
+<li class="fragment"><strong>User creation</strong>: Clashing user name or unauthorized/not found</li>
+<li class="fragment"><strong>Fetch user</strong>: User not found, or unauthorized/not found</li>
+</ul></li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> UserServiceError</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Unauthorized</span>() <span class="kw">extends</span> UserServiceError</span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">UserNotFound</span>() <span class="kw">extends</span> UserServiceError</span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">UserAlreadyExists</span>() <span class="kw">extends</span> UserServiceError</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">import</span> zio._</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">trait</span> UserService {</span>
+<span id="cb7-3"><a href="#cb7-3"></a>  <span class="kw">def</span> <span class="fu">createUser</span>(userData: UserData): IO[UserServiceError, UserId]</span>
+<span id="cb7-4"><a href="#cb7-4"></a>  <span class="kw">def</span> getUser: IO[UserServiceError, User]</span>
+<span id="cb7-5"><a href="#cb7-5"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">def</span> <span class="fu">createUser</span>(userData: UserData): IO[ServiceError, UserId] = {</span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="kw">for</span> {</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    _ &lt;- checkPermissions <span class="co">// IO[Unauthorized, Unit]</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>    newUser &lt;- insertUserIntoDb <span class="co">// IO[UserAlreadyExists, User]</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>  } <span class="kw">yield</span> newUser</span>
+<span id="cb8-6"><a href="#cb8-6"></a>}</span></code></pre></div>
+</section><section id="the-problem-with-sealed-traits" class="slide level2">
+<h2>The problem with sealed traits</h2>
+<ul>
+<li class="fragment">Choose one:
+<ul>
+<li class="fragment">Mispresent whaterrors can actually happen</li>
+<li class="fragment">Code repetition ==&gt; Boilerplate, hard to reuse code</li>
+</ul></li>
+<li class="fragment">No partial handling</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> CreateUserErrors</span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="kw">object</span> CreateUserErrors {</span>
+<span id="cb9-4"><a href="#cb9-4"></a>  <span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Unauthorized</span>() <span class="kw">extends</span> CreateUserErrors</span>
+<span id="cb9-5"><a href="#cb9-5"></a>  <span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">UserAlreadyExists</span>() <span class="kw">extends</span> CreateUserErrors</span>
+<span id="cb9-6"><a href="#cb9-6"></a>}</span>
+<span id="cb9-7"><a href="#cb9-7"></a></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="kw">sealed</span> <span class="kw">trait</span> FetchUserErrors</span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="kw">object</span> FetchUserErrors {</span>
+<span id="cb9-10"><a href="#cb9-10"></a>  <span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Unauthorized</span>() <span class="kw">extends</span> FetchUserErrors</span>
+<span id="cb9-11"><a href="#cb9-11"></a>  <span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">UserNotFound</span>() <span class="kw">extends</span> FetchUserErrors</span>
+<span id="cb9-12"><a href="#cb9-12"></a>}</span></code></pre></div>
+</section><section id="java-checked-exceptions-1" class="slide level2">
+<h2>Java checked exceptions</h2>
+<ul>
+<li class="fragment">Handle the error, or let it bubble up (enforced)</li>
+<li class="fragment">First class, but non-composeable</li>
+<li class="fragment">Akward interactions with closures leads to unwieldly code when using with future, streams and others</li>
+</ul>
+</section><section id="what-we-want" class="slide level2">
+<h2>What we want</h2>
+<ul>
+<li class="fragment">Freely combine existing error classes</li>
+<li class="fragment">Exhaustiveness</li>
+<li class="fragment">Allow handling only a subset of errors</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1"></a><span class="co">// Dotty / Scala 3</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="kw">def</span> <span class="fu">createUser</span>(userData: UserData): IO[Unauthorized | UserAlreadyExists, UserId] = {</span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="kw">for</span> {</span>
+<span id="cb10-4"><a href="#cb10-4"></a>    _ &lt;- checkPermissions <span class="co">// IO[Unauthorized, Unit]</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a>    newUser &lt;- insertUserIntoDb <span class="co">// IO[UserAlreadyExists, User]</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a>  } <span class="kw">yield</span> newUser</span>
+<span id="cb10-7"><a href="#cb10-7"></a>}</span></code></pre></div>
+</section><section id="shapeless-coproduct" class="slide level2">
+<h2>Shapeless Coproduct!</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">import</span> shapeless._</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="kw">type</span> E12 = E1 :+: E2 :+: CNil</span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="co">// Similar to Either[E1, Either[E2, CNil]]</span></span>
+<span id="cb11-4"><a href="#cb11-4"></a></span>
+<span id="cb11-5"><a href="#cb11-5"></a><span class="kw">import</span> shapeless.<span class="fu">syntax</span>.<span class="fu">inject</span>._</span>
+<span id="cb11-6"><a href="#cb11-6"></a></span>
+<span id="cb11-7"><a href="#cb11-7"></a><span class="kw">val</span> e1InE12: E12 = <span class="fu">E1</span>().<span class="fu">inject</span>[E12]</span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="co">// e1InE12: E12 = Inl(E1())</span></span>
+<span id="cb11-9"><a href="#cb11-9"></a><span class="kw">val</span> e2InE12: E12 = <span class="fu">E2</span>().<span class="fu">inject</span>[E12]</span>
+<span id="cb11-10"><a href="#cb11-10"></a><span class="co">// e2InE12: E12 = Inr(Inl(E2()))</span></span>
+<span id="cb11-11"><a href="#cb11-11"></a></span>
+<span id="cb11-12"><a href="#cb11-12"></a>e1InE12 <span class="kw">match</span> {</span>
+<span id="cb11-13"><a href="#cb11-13"></a>  <span class="kw">case</span> <span class="fu">Inl</span>(<span class="fu">E1</span>()) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E1!&quot;</span>)</span>
+<span id="cb11-14"><a href="#cb11-14"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inl</span>(<span class="fu">E2</span>())) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E2!&quot;</span>)</span>
+<span id="cb11-15"><a href="#cb11-15"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inr</span>(cnil)) =&gt; cnil.<span class="fu">impossible</span> <span class="co">// To satisfy exhaustiveness check</span></span>
+<span id="cb11-16"><a href="#cb11-16"></a>}</span>
+<span id="cb11-17"><a href="#cb11-17"></a><span class="co">// it&#39;s E1!</span></span></code></pre></div>
+</section><section id="coproduct-is-cool" class="slide level2">
+<h2>Coproduct is cool!</h2>
+<ul>
+<li class="fragment">Combine small coproducts into larger ones</li>
+<li class="fragment">Extract particular cases in a coproduct, leaving behind unhandled cases</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">import</span> shapeless.<span class="fu">ops</span>.<span class="fu">coproduct</span>._</span>
+<span id="cb12-2"><a href="#cb12-2"></a></span>
+<span id="cb12-3"><a href="#cb12-3"></a>Remove[E12, E1].<span class="fu">apply</span>(e1InE12)</span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="co">// res5: Either[E1, E2 :+: CNil] = Left(E1())</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a>Remove[E12, E1].<span class="fu">apply</span>(e2InE12)</span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="co">// res6: Either[E1, E2 :+: CNil] = Right(Inl(E2()))</span></span>
+<span id="cb12-7"><a href="#cb12-7"></a></span>
+<span id="cb12-8"><a href="#cb12-8"></a>Basis[E1 :+: E2 :+: E3 :+: CNil, E12].<span class="fu">inverse</span>(<span class="fu">Right</span>(e2InE12))</span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="co">// res7: E1 :+: E2 :+: E3 :+: CNil = Inr(Inl(E2()))</span></span></code></pre></div>
+</section><section id="introducing-hotpotato" class="slide level2">
+<h2>Introducing Hotpotato</h2>
+</section><section id="references" class="slide level2">
+<h2>References</h2>
+<p>FIXME - Luke’s bifunctor IO blog post</p>
+</section><section id="fixme" class="slide level2">
+<h2>FIXME</h2>
+<ul>
+<li class="fragment">Error combination</li>
+<li class="fragment">Partial handling and transformation</li>
+<li class="fragment">Exhaustive matching</li>
+</ul>
+</section></section>
+    </div>
+  </div>
+
+  <script src="https://revealjs.com/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'https://revealjs.com/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'https://revealjs.com/plugin/zoom-js/zoom.js', async: true },
+          { src: 'https://revealjs.com/plugin/math/math.js', async: true },
+          { src: 'https://revealjs.com/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
