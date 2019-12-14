@@ -99,15 +99,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div class="slides">
 
 
-<section><section id="adventures-in-type-safe-error-handling" class="title-slide slide level1"><h1>Adventures in type-safe error handling</h1></section><section id="about-me" class="slide level2">
-<h2>About me</h2>
-<ul>
-<li class="fragment">Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
-<li class="fragment">Types, FP and other tools that make me more productive</li>
-<li class="fragment"><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
-</ul>
-</section><section id="error-handling---a-whirlwind-tour" class="slide level2">
-<h2>Error handling - A whirlwind tour</h2>
+<section><section id="adventures-in-type-safe-error-handling" class="title-slide slide level1"><h1>Adventures in type-safe error handling</h1></section><section class="slide level2">
+
+<p>How do we handle errors in Scala today?</p>
 </section><section id="eithere-a" class="slide level2">
 <h2>Either[+E, +A]</h2>
 <ul>
@@ -128,12 +122,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-8"><a href="#cb2-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
 </div>
 <ul>
-<li class="fragment">Covariant - Compiler will find <strong>Least Upper Bound</strong> (LUB) to make the error type converge</li>
+<li class="fragment">Covariant - Compiler will find <strong>Least Upper Bound</strong> (LUB) to reconcile the error type</li>
 </ul>
-</section><section id="cats-ioa-futurea" class="slide level2">
-<h2>Cats IO[A] / Future[A]</h2>
+</section><section id="cats-ioa" class="slide level2">
+<h2>Cats IO[A]</h2>
 <ul>
-<li class="fragment">Any <strong>IO[A]</strong> can fail with a <strong>Throwable</strong></li>
+<li class="fragment">Any <strong>IO[A]</strong> can fail with a <strong>Throwable</strong> using <strong>IO.raiseError</strong></li>
 <li class="fragment">Have to rely on documentation, not types</li>
 </ul>
 <div class="fragment">
@@ -146,73 +140,94 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-7"><a href="#cb3-7"></a>    _ &lt;- io2</span>
 <span id="cb3-8"><a href="#cb3-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
 </div>
+</section><section class="slide level2">
+
+<h3 id="either-in-io">Either in IO</h3>
+<ul>
+<li>Need to check the <strong>Either</strong> result from the previous step</li>
+<li>Error prone and verbose - Not recommended</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">def</span> io1: IO[Either[E1, Unit]] = ???</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">def</span> io2: IO[Either[E2, Unit]] = ???</span>
+<span id="cb4-3"><a href="#cb4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">for</span> {</span>
+<span id="cb4-5"><a href="#cb4-5"></a>  result &lt;- io1</span>
+<span id="cb4-6"><a href="#cb4-6"></a>  result2 &lt;- result <span class="kw">match</span> {</span>
+<span id="cb4-7"><a href="#cb4-7"></a>    <span class="kw">case</span> <span class="fu">Left</span>(e1) =&gt; IO.<span class="fu">pure</span>(<span class="fu">Left</span>(e1))</span>
+<span id="cb4-8"><a href="#cb4-8"></a>    <span class="kw">case</span> <span class="fu">Right</span>(_) =&gt; io2</span>
+<span id="cb4-9"><a href="#cb4-9"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10"></a>} <span class="kw">yield</span> {</span>
+<span id="cb4-11"><a href="#cb4-11"></a>  result2 <span class="kw">match</span> {</span>
+<span id="cb4-12"><a href="#cb4-12"></a>    <span class="kw">case</span> <span class="fu">Left</span>(e2) =&gt; <span class="fu">Left</span>(e2)</span>
+<span id="cb4-13"><a href="#cb4-13"></a>    <span class="kw">case</span> <span class="fu">Right</span>(_) =&gt; <span class="fu">Right</span>(())</span>
+<span id="cb4-14"><a href="#cb4-14"></a>  }</span>
+<span id="cb4-15"><a href="#cb4-15"></a>}</span></code></pre></div>
 </section><section id="eithertio-e-a" class="slide level2">
 <h2>EitherT[IO, E, A]</h2>
 <p>Similar to <strong>IO[Either[E, A]]</strong> but “short-circuits” when you have a <code>Left</code></p>
 <div class="fragment">
-<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">def</span> et1: EitherT[IO, E1, Unit] = ???</span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">def</span> et2: EitherT[IO, E2, Unit] = ???</span>
-<span id="cb4-3"><a href="#cb4-3"></a></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">val</span> eitherTResult: EitherT[IO, AllErrors, Unit] = </span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="kw">for</span> {</span>
-<span id="cb4-6"><a href="#cb4-6"></a>    _ &lt;- et1.<span class="fu">leftWiden</span>[AllErrors]</span>
-<span id="cb4-7"><a href="#cb4-7"></a>    _ &lt;- et2.<span class="fu">leftWiden</span>[AllErrors]</span>
-<span id="cb4-8"><a href="#cb4-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">def</span> et1: EitherT[IO, E1, Unit] = ???</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">def</span> et2: EitherT[IO, E2, Unit] = ???</span>
+<span id="cb5-3"><a href="#cb5-3"></a></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="kw">val</span> eitherTResult: EitherT[IO, AllErrors, Unit] = </span>
+<span id="cb5-5"><a href="#cb5-5"></a>  <span class="kw">for</span> {</span>
+<span id="cb5-6"><a href="#cb5-6"></a>    _ &lt;- et1.<span class="fu">leftWiden</span>[AllErrors]</span>
+<span id="cb5-7"><a href="#cb5-7"></a>    _ &lt;- et2.<span class="fu">leftWiden</span>[AllErrors]</span>
+<span id="cb5-8"><a href="#cb5-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
 </div>
 <ul>
 <li class="fragment">Invariant - no auto upcasting but you can use <code>leftWiden</code></li>
-<li class="fragment">Still have IO’s hidden (Throwable) way to terminate the execution</li>
+<li class="fragment"><strong>IO.raiseError</strong> reserved for defects or unhandleable errors</li>
 </ul>
-</section><section id="zio-r-e-a" class="slide level2">
-<h2>ZIO[-R, +E, +A]</h2>
-<div>
-<div class="fragment">
+</section><section id="bifunctor-ioe-a-zio" class="slide level2">
+<h2>Bifunctor IO[+E, +A] (ZIO)</h2>
 <ul>
 <li>Similar to EitherT, but better ergonomic</li>
-<li>Can terminate the execution chain with a <code>Throwable</code> (“Die”)</li>
 </ul>
-</div>
-</div>
 <div class="fragment">
-<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">// Note, this is ZIO&#39;s bifucntor IO, not cats.effect.IO</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">def</span> zio1: IO[E1, Unit] = ???</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">def</span> zio2: IO[E2, Unit] = ???</span>
-<span id="cb5-4"><a href="#cb5-4"></a></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">val</span> eitherTResult: IO[AllErrors, Unit] = </span>
-<span id="cb5-6"><a href="#cb5-6"></a>  <span class="kw">for</span> {</span>
-<span id="cb5-7"><a href="#cb5-7"></a>    _ &lt;- zio1</span>
-<span id="cb5-8"><a href="#cb5-8"></a>    _ &lt;- zio2</span>
-<span id="cb5-9"><a href="#cb5-9"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">def</span> zio1: IO[E1, Unit] = ???</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">def</span> zio2: IO[E2, Unit] = ???</span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="kw">val</span> eitherTResult: IO[AllErrors, Unit] = </span>
+<span id="cb6-5"><a href="#cb6-5"></a>  <span class="kw">for</span> {</span>
+<span id="cb6-6"><a href="#cb6-6"></a>    _ &lt;- zio1</span>
+<span id="cb6-7"><a href="#cb6-7"></a>    _ &lt;- zio2</span>
+<span id="cb6-8"><a href="#cb6-8"></a>  } <span class="kw">yield</span> ()</span></code></pre></div>
 </div>
+<ul>
+<li class="fragment">Can terminate the execution chain with a <code>Throwable</code> (<strong>IO.die</strong>)</li>
+</ul>
+</section><section class="slide level2">
+
 </section><section id="java-checked-exceptions" class="slide level2">
 <h2>Java Checked Exceptions!</h2>
 </section><section class="slide level2">
 
-<div class="sourceCode" id="cb6"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb6-1"><a href="#cb6-1"></a><span class="dt">void</span> <span class="fu">method1</span>() <span class="kw">throws</span> E1 { <span class="kw">... </span>}</span>
-<span id="cb6-2"><a href="#cb6-2"></a></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="dt">void</span> <span class="fu">method2</span>() <span class="kw">throws</span> E2 { <span class="kw">... </span>}</span>
-<span id="cb6-4"><a href="#cb6-4"></a></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="dt">void</span> <span class="fu">onlyE1Handled</span>() <span class="kw">throws</span> E2 { <span class="co">// E2 not handled, must declare!</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a>  <span class="kw">try</span> {</span>
-<span id="cb6-7"><a href="#cb6-7"></a>    <span class="fu">method1</span>();</span>
-<span id="cb6-8"><a href="#cb6-8"></a>    <span class="fu">method2</span>();</span>
-<span id="cb6-9"><a href="#cb6-9"></a>  } </span>
-<span id="cb6-10"><a href="#cb6-10"></a>  <span class="kw">catch</span> (E1 e1) { <span class="kw">... </span>}</span>
-<span id="cb6-11"><a href="#cb6-11"></a>}</span>
-<span id="cb6-12"><a href="#cb6-12"></a></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="dt">void</span> <span class="fu">allHandled</span>() { <span class="co">// All errors handled!</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a>  <span class="kw">try</span> {</span>
-<span id="cb6-15"><a href="#cb6-15"></a>    <span class="fu">method1</span>();</span>
-<span id="cb6-16"><a href="#cb6-16"></a>    <span class="fu">method2</span>();</span>
-<span id="cb6-17"><a href="#cb6-17"></a>  } </span>
-<span id="cb6-18"><a href="#cb6-18"></a>  <span class="kw">catch</span> (E1 e1) { <span class="kw">... </span>}</span>
-<span id="cb6-19"><a href="#cb6-19"></a>  <span class="kw">catch</span> (E2 e2) { <span class="kw">... </span>}</span>
-<span id="cb6-20"><a href="#cb6-20"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb7-1"><a href="#cb7-1"></a><span class="dt">void</span> <span class="fu">method1</span>() <span class="kw">throws</span> E1 { <span class="kw">... </span>}</span>
+<span id="cb7-2"><a href="#cb7-2"></a></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="dt">void</span> <span class="fu">method2</span>() <span class="kw">throws</span> E2 { <span class="kw">... </span>}</span>
+<span id="cb7-4"><a href="#cb7-4"></a></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="dt">void</span> <span class="fu">onlyE1Handled</span>() <span class="kw">throws</span> E2 { <span class="co">// E2 not handled, must declare!</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a>  <span class="kw">try</span> {</span>
+<span id="cb7-7"><a href="#cb7-7"></a>    <span class="fu">method1</span>();</span>
+<span id="cb7-8"><a href="#cb7-8"></a>    <span class="fu">method2</span>();</span>
+<span id="cb7-9"><a href="#cb7-9"></a>  } </span>
+<span id="cb7-10"><a href="#cb7-10"></a>  <span class="kw">catch</span> (E1 e1) { <span class="kw">... </span>}</span>
+<span id="cb7-11"><a href="#cb7-11"></a>}</span>
+<span id="cb7-12"><a href="#cb7-12"></a></span>
+<span id="cb7-13"><a href="#cb7-13"></a><span class="dt">void</span> <span class="fu">allHandled</span>() { <span class="co">// All errors handled!</span></span>
+<span id="cb7-14"><a href="#cb7-14"></a>  <span class="kw">try</span> {</span>
+<span id="cb7-15"><a href="#cb7-15"></a>    <span class="fu">method1</span>();</span>
+<span id="cb7-16"><a href="#cb7-16"></a>    <span class="fu">method2</span>();</span>
+<span id="cb7-17"><a href="#cb7-17"></a>  } </span>
+<span id="cb7-18"><a href="#cb7-18"></a>  <span class="kw">catch</span> (E1 e1) { <span class="kw">... </span>}</span>
+<span id="cb7-19"><a href="#cb7-19"></a>  <span class="kw">catch</span> (E2 e2) { <span class="kw">... </span>}</span>
+<span id="cb7-20"><a href="#cb7-20"></a>}</span></code></pre></div>
 </section><section id="the-trouble-with-checked-exceptions" class="slide level2">
 <h2>The trouble with checked exceptions</h2>
 <ul>
 <li class="fragment">Not available in Scala 🙃</li>
-<li class="fragment">Errors are not return values. Doesn’t compose well with libraries (Java 8 streams / lambdas)</li>
+<li class="fragment">Errors are not values. Doesn’t work well with many newer language features such as anonymous functions</li>
 <li class="fragment">Type system special case - no abstraction or reuse</li>
 </ul>
 </section><section id="but-it-has-many-cool-ideas-too" class="slide level2">
@@ -226,128 +241,138 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section><section id="shapeless-coproduct" class="slide level2">
 <h2>Shapeless Coproduct!</h2>
 <div class="fragment">
-<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">import</span> shapeless._</span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">type</span> E12 = E1 :+: E2 :+: CNil</span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="co">// Similar to Either[E1, Either[E2, CNil]]</span></span>
-<span id="cb7-4"><a href="#cb7-4"></a></span>
-<span id="cb7-5"><a href="#cb7-5"></a><span class="kw">import</span> shapeless.<span class="fu">syntax</span>.<span class="fu">inject</span>._</span>
-<span id="cb7-6"><a href="#cb7-6"></a></span>
-<span id="cb7-7"><a href="#cb7-7"></a><span class="kw">val</span> e1InE12: E1 :+: E2 :+: CNil = <span class="fu">E1</span>().<span class="fu">inject</span>[E1 :+: E2 :+: CNil]</span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="co">// e1InE12: E1 :+: E2 :+: CNil = Inl(E1())</span></span>
-<span id="cb7-9"><a href="#cb7-9"></a><span class="kw">val</span> e2InE12: E1 :+: E2 :+: CNil = <span class="fu">E2</span>().<span class="fu">inject</span>[E1 :+: E2 :+: CNil]</span>
-<span id="cb7-10"><a href="#cb7-10"></a><span class="co">// e2InE12: E1 :+: E2 :+: CNil = Inr(Inl(E2()))</span></span>
-<span id="cb7-11"><a href="#cb7-11"></a></span>
-<span id="cb7-12"><a href="#cb7-12"></a>e1InE12 <span class="kw">match</span> {</span>
-<span id="cb7-13"><a href="#cb7-13"></a>  <span class="kw">case</span> <span class="fu">Inl</span>(<span class="fu">E1</span>()) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E1!&quot;</span>)</span>
-<span id="cb7-14"><a href="#cb7-14"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inl</span>(<span class="fu">E2</span>())) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E2!&quot;</span>)</span>
-<span id="cb7-15"><a href="#cb7-15"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inr</span>(cnil)) =&gt; cnil.<span class="fu">impossible</span> <span class="co">// To satisfy exhaustiveness check</span></span>
-<span id="cb7-16"><a href="#cb7-16"></a>}</span>
-<span id="cb7-17"><a href="#cb7-17"></a><span class="co">// it&#39;s E1!</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">import</span> shapeless._</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="kw">type</span> E123 = E1 :+: E2 :+: E3 :+: CNil</span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="co">// Similar to Either[E1, Either[E2, Either[E3, CNil]]</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="kw">import</span> shapeless.<span class="fu">syntax</span>.<span class="fu">inject</span>._</span>
+<span id="cb8-6"><a href="#cb8-6"></a></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="kw">val</span> e1InCoproduct: E1 :+: E2 :+: E3 :+: CNil = <span class="fu">E1</span>().<span class="fu">inject</span>[E1 :+: E2 :+: E3 :+: CNil]</span>
+<span id="cb8-8"><a href="#cb8-8"></a><span class="co">// e1InCoproduct: E1 :+: E2 :+: E3 :+: CNil = Inl(E1())</span></span>
+<span id="cb8-9"><a href="#cb8-9"></a><span class="kw">val</span> e2InCoproduct: E1 :+: E2 :+: E3 :+: CNil = <span class="fu">E2</span>().<span class="fu">inject</span>[E1 :+: E2 :+: E3 :+: CNil]</span>
+<span id="cb8-10"><a href="#cb8-10"></a><span class="co">// e2InCoproduct: E1 :+: E2 :+: E3 :+: CNil = Inr(Inl(E2()))</span></span>
+<span id="cb8-11"><a href="#cb8-11"></a></span>
+<span id="cb8-12"><a href="#cb8-12"></a>e2InCoproduct <span class="kw">match</span> {</span>
+<span id="cb8-13"><a href="#cb8-13"></a>  <span class="kw">case</span> <span class="fu">Inl</span>(<span class="fu">E1</span>()) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E1!&quot;</span>)</span>
+<span id="cb8-14"><a href="#cb8-14"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inl</span>(<span class="fu">E2</span>())) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E2!&quot;</span>)</span>
+<span id="cb8-15"><a href="#cb8-15"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inr</span>(<span class="fu">Inl</span>(<span class="fu">E3</span>()))) =&gt; <span class="fu">println</span>(<span class="st">&quot;it&#39;s E3!&quot;</span>)</span>
+<span id="cb8-16"><a href="#cb8-16"></a>  <span class="kw">case</span> <span class="fu">Inr</span>(<span class="fu">Inr</span>(<span class="fu">Inr</span>(cnil))) =&gt; cnil.<span class="fu">impossible</span> <span class="co">// To satisfy exhaustiveness check</span></span>
+<span id="cb8-17"><a href="#cb8-17"></a>}</span>
+<span id="cb8-18"><a href="#cb8-18"></a><span class="co">// it&#39;s E2!</span></span></code></pre></div>
 </div>
 </section><section id="coproducts-are-flexible" class="slide level2">
 <h2>Coproducts are flexible!</h2>
-<ul>
-<li class="fragment">E.g. Extract particular cases from a coproduct!</li>
-</ul>
-<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">import</span> shapeless.<span class="fu">ops</span>.<span class="fu">coproduct</span>._</span>
-<span id="cb8-2"><a href="#cb8-2"></a></span>
-<span id="cb8-3"><a href="#cb8-3"></a><span class="co">// Returns a Left(E1()) if we have an E1</span></span>
-<span id="cb8-4"><a href="#cb8-4"></a>Remove[E1 :+: E2 :+: CNil, E1].<span class="fu">apply</span>(e1InE12)</span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="co">// res7: Either[E1, E2 :+: CNil] = Left(E1())</span></span>
-<span id="cb8-6"><a href="#cb8-6"></a></span>
-<span id="cb8-7"><a href="#cb8-7"></a><span class="co">// Otherwise return the rest in Right(..)</span></span>
-<span id="cb8-8"><a href="#cb8-8"></a>Remove[E1 :+: E2 :+: CNil, E1].<span class="fu">apply</span>(e2InE12)</span>
-<span id="cb8-9"><a href="#cb8-9"></a><span class="co">// res8: Either[E1, E2 :+: CNil] = Right(Inl(E2()))</span></span></code></pre></div>
+<p>Let’s extract a particular cases from a coproduct!</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">import</span> shapeless.<span class="fu">ops</span>.<span class="fu">coproduct</span>._</span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="co">// Returns a Left(E1()) if we have an E1</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a>Remove[E1 :+: E2 :+: E3 :+: CNil, E1].<span class="fu">apply</span>(e1InCoproduct)</span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="co">// res8: Either[E1, E2 :+: E3 :+: CNil] = Left(E1())</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co">// Otherwise return the rest in Right(..)</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a>Remove[E1 :+: E2 :+: E3 :+: CNil, E2].<span class="fu">apply</span>(e1InCoproduct)</span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">// res9: Either[E2, E1 :+: E3 :+: CNil] = Right(Inl(E1()))</span></span></code></pre></div>
+<div class="fragment">
+<p>…and you can do many, many things with Coproducts!</p>
+</div>
+</section><section class="slide level2">
+
+<p>Using <strong>Coproducts</strong> directly feels cumbersome</p>
+<p>Can we make it nicer?</p>
 </section><section id="hotpotato" class="slide level2">
 <h2>Hotpotato</h2>
 <p>A library for type-safe, ergonomic and readable error handling!</p>
+<ul>
+<li class="fragment">Based on Shapeless coproducts</li>
+<li class="fragment">Integrates with ZIO and Cats</li>
+</ul>
 </section><section id="first-a-bit-of-simplification" class="slide level2">
 <h2>First, a bit of simplification</h2>
 <p>Coproducts can be a bit tedious to read and write, so Hotpotato provides some type aliases for coproducts</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">import</span> hotpotato._</span>
-<span id="cb9-2"><a href="#cb9-2"></a></span>
-<span id="cb9-3"><a href="#cb9-3"></a><span class="kw">type</span> ErrorsSimple = OneOf3[E1, E2, E3] <span class="co">// is equivalent to E1 :+: E2 :+: E3 :+: CNil</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">import</span> hotpotato._</span>
+<span id="cb10-2"><a href="#cb10-2"></a></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="kw">type</span> ErrorsSimple = OneOf3[E1, E2, E3] <span class="co">// is equivalent to E1 :+: E2 :+: E3 :+: CNil</span></span></code></pre></div>
 </section><section id="handling-errors---exhaustive" class="slide level2">
 <h2>Handling errors - exhaustive</h2>
 <ul>
 <li>Convert all errors into one single type</li>
 <li><strong>OR</strong> each to its own type</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">import</span> hotpotato._</span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="kw">import</span> shapeless.<span class="fu">syntax</span>.<span class="fu">inject</span>._</span>
-<span id="cb10-3"><a href="#cb10-3"></a><span class="kw">import</span> zio._</span>
-<span id="cb10-4"><a href="#cb10-4"></a></span>
-<span id="cb10-5"><a href="#cb10-5"></a><span class="kw">val</span> io: IO[OneOf3[E1, E2, E3], Unit] = IO.<span class="fu">fail</span>(<span class="fu">E1</span>().<span class="fu">inject</span>[OneOf3[E1, E2, E3]])</span>
-<span id="cb10-6"><a href="#cb10-6"></a></span>
-<span id="cb10-7"><a href="#cb10-7"></a><span class="co">// Turn every error into String</span></span>
-<span id="cb10-8"><a href="#cb10-8"></a><span class="kw">val</span> resString: IO[String, Unit] = io.<span class="fu">mapErrorAllInto</span>(</span>
-<span id="cb10-9"><a href="#cb10-9"></a>  (e1: E1) =&gt; <span class="st">&quot;e1&quot;</span>,</span>
-<span id="cb10-10"><a href="#cb10-10"></a>  (e2: E2) =&gt; <span class="st">&quot;e2&quot;</span>,</span>
-<span id="cb10-11"><a href="#cb10-11"></a>  (e3: E3) =&gt; <span class="st">&quot;e3&quot;</span>,</span>
-<span id="cb10-12"><a href="#cb10-12"></a>)</span>
-<span id="cb10-13"><a href="#cb10-13"></a></span>
-<span id="cb10-14"><a href="#cb10-14"></a><span class="co">// Turn every error into some other type</span></span>
-<span id="cb10-15"><a href="#cb10-15"></a><span class="kw">val</span> result: IO[OneOf2[X2, X1], Unit] = io.<span class="fu">mapErrorAll</span>(</span>
-<span id="cb10-16"><a href="#cb10-16"></a>  (e1: E1) =&gt; <span class="fu">X1</span>(),</span>
-<span id="cb10-17"><a href="#cb10-17"></a>  (e2: E2) =&gt; <span class="fu">X2</span>(),</span>
-<span id="cb10-18"><a href="#cb10-18"></a>  (e3: E3) =&gt; <span class="fu">X1</span>(),</span>
-<span id="cb10-19"><a href="#cb10-19"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">import</span> hotpotato._</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="kw">import</span> shapeless.<span class="fu">syntax</span>.<span class="fu">inject</span>._</span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="kw">import</span> zio._</span>
+<span id="cb11-4"><a href="#cb11-4"></a></span>
+<span id="cb11-5"><a href="#cb11-5"></a><span class="kw">val</span> io: IO[OneOf3[E1, E2, E3], Unit] = IO.<span class="fu">fail</span>(<span class="fu">E1</span>().<span class="fu">inject</span>[OneOf3[E1, E2, E3]])</span>
+<span id="cb11-6"><a href="#cb11-6"></a></span>
+<span id="cb11-7"><a href="#cb11-7"></a><span class="co">// Turn every error into String</span></span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="kw">val</span> resString: IO[String, Unit] = io.<span class="fu">mapErrorAllInto</span>(</span>
+<span id="cb11-9"><a href="#cb11-9"></a>  (e1: E1) =&gt; <span class="st">&quot;e1&quot;</span>,</span>
+<span id="cb11-10"><a href="#cb11-10"></a>  (e2: E2) =&gt; <span class="st">&quot;e2&quot;</span>,</span>
+<span id="cb11-11"><a href="#cb11-11"></a>  (e3: E3) =&gt; <span class="st">&quot;e3&quot;</span>,</span>
+<span id="cb11-12"><a href="#cb11-12"></a>)</span>
+<span id="cb11-13"><a href="#cb11-13"></a></span>
+<span id="cb11-14"><a href="#cb11-14"></a><span class="co">// Turn every error into some other type</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a><span class="kw">val</span> result: IO[OneOf2[X2, X1], Unit] = io.<span class="fu">mapErrorAll</span>(</span>
+<span id="cb11-16"><a href="#cb11-16"></a>  (e1: E1) =&gt; <span class="fu">X1</span>(),</span>
+<span id="cb11-17"><a href="#cb11-17"></a>  (e2: E2) =&gt; <span class="fu">X2</span>(),</span>
+<span id="cb11-18"><a href="#cb11-18"></a>  (e3: E3) =&gt; <span class="fu">X1</span>(),</span>
+<span id="cb11-19"><a href="#cb11-19"></a>)</span></code></pre></div>
 </section><section id="handling-errors---partial" class="slide level2">
 <h2>Handling errors - partial</h2>
-<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">import</span> hotpotato._</span>
-<span id="cb11-2"><a href="#cb11-2"></a></span>
-<span id="cb11-3"><a href="#cb11-3"></a><span class="kw">val</span> ioE123: IO[OneOf3[E1, E2, E3], String] = ???</span>
-<span id="cb11-4"><a href="#cb11-4"></a></span>
-<span id="cb11-5"><a href="#cb11-5"></a><span class="co">// Turn some error into String</span></span>
-<span id="cb11-6"><a href="#cb11-6"></a><span class="kw">val</span> result: IO[OneOf3[String, Int, E3], String] = ioE123.<span class="fu">mapErrorSome</span>(</span>
-<span id="cb11-7"><a href="#cb11-7"></a>  (e1: E1) =&gt; <span class="st">&quot;e1&quot;</span>,</span>
-<span id="cb11-8"><a href="#cb11-8"></a>  (e2: E2) =&gt; <span class="dv">12</span>,</span>
-<span id="cb11-9"><a href="#cb11-9"></a>)</span></code></pre></div>
-</section><section id="effectful-error-handling" class="slide level2">
-<h2>Effectful Error handling</h2>
-<p>Very often error recovery/handling requires side-effect (e.g. logging)</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">import</span> hotpotato._</span>
 <span id="cb12-2"><a href="#cb12-2"></a></span>
 <span id="cb12-3"><a href="#cb12-3"></a><span class="kw">val</span> ioE123: IO[OneOf3[E1, E2, E3], String] = ???</span>
-<span id="cb12-4"><a href="#cb12-4"></a><span class="kw">val</span> fallbackIO: E1 =&gt; IO[Int, String] = ???</span>
-<span id="cb12-5"><a href="#cb12-5"></a></span>
-<span id="cb12-6"><a href="#cb12-6"></a><span class="kw">val</span> result: IO[OneOf3[Int, E2, E3], String] = ioE123.<span class="fu">flatMapErrorSome</span>(</span>
-<span id="cb12-7"><a href="#cb12-7"></a>  (e1: E1) =&gt; <span class="fu">fallbackIO</span>(e1),</span>
-<span id="cb12-8"><a href="#cb12-8"></a>)</span></code></pre></div>
+<span id="cb12-4"><a href="#cb12-4"></a></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">// Turn some error into String</span></span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="kw">val</span> result: IO[OneOf3[String, Int, E3], String] = ioE123.<span class="fu">mapErrorSome</span>(</span>
+<span id="cb12-7"><a href="#cb12-7"></a>  (e1: E1) =&gt; <span class="st">&quot;e1&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8"></a>  (e2: E2) =&gt; <span class="dv">12</span>,</span>
+<span id="cb12-9"><a href="#cb12-9"></a>)</span></code></pre></div>
+</section><section id="error-handling-with-side-effects" class="slide level2">
+<h2>Error handling with side-effects</h2>
+<p>Very often error recovery/handling requires side-effect (e.g. logging)</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">import</span> hotpotato._</span>
+<span id="cb13-2"><a href="#cb13-2"></a></span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="kw">val</span> ioE123: IO[OneOf3[E1, E2, E3], String] = ???</span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="kw">val</span> fallbackIO: E1 =&gt; IO[Int, String] = ???</span>
+<span id="cb13-5"><a href="#cb13-5"></a></span>
+<span id="cb13-6"><a href="#cb13-6"></a><span class="kw">val</span> result: IO[OneOf3[Int, E2, E3], String] = ioE123.<span class="fu">flatMapErrorSome</span>(</span>
+<span id="cb13-7"><a href="#cb13-7"></a>  (e1: E1) =&gt; <span class="fu">fallbackIO</span>(e1),</span>
+<span id="cb13-8"><a href="#cb13-8"></a>)</span></code></pre></div>
 <div class="fragment">
 <p><strong>flatMapErrorAll</strong>, <strong>flatMapErrorAllInto</strong> are provided for exhaustive handling too</p>
 </div>
 </section><section id="combining-errors" class="slide level2">
 <h2>Combining errors</h2>
 <p>We often have a series of steps and each step may have different errors</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">import</span> hotpotato._</span>
-<span id="cb13-2"><a href="#cb13-2"></a></span>
-<span id="cb13-3"><a href="#cb13-3"></a><span class="kw">val</span> ioE1: IO[E1, Unit] = ???</span>
-<span id="cb13-4"><a href="#cb13-4"></a><span class="kw">val</span> ioE23: IO[OneOf2[E2, E3], Unit] = ???</span>
-<span id="cb13-5"><a href="#cb13-5"></a></span>
-<span id="cb13-6"><a href="#cb13-6"></a><span class="co">// An embedder tells the compiler what types we want all errors to embed to</span></span>
-<span id="cb13-7"><a href="#cb13-7"></a><span class="kw">implicit</span> <span class="kw">val</span> embedder: Embedder[OneOf3[E1, E2, E3]] = Embedder.<span class="fu">make</span></span>
-<span id="cb13-8"><a href="#cb13-8"></a></span>
-<span id="cb13-9"><a href="#cb13-9"></a><span class="kw">val</span> result: IO[OneOf3[E1, E2, E3], Unit] = <span class="kw">for</span> {</span>
-<span id="cb13-10"><a href="#cb13-10"></a>  _ &lt;- ioE1.<span class="fu">embedError</span></span>
-<span id="cb13-11"><a href="#cb13-11"></a>  _ &lt;- ioE23.<span class="fu">embedError</span></span>
-<span id="cb13-12"><a href="#cb13-12"></a>} <span class="kw">yield</span> ()</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">import</span> hotpotato._</span>
+<span id="cb14-2"><a href="#cb14-2"></a></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="kw">val</span> ioE1: IO[E1, Unit] = ???</span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="kw">val</span> ioE23: IO[OneOf2[E2, E3], Unit] = ???</span>
+<span id="cb14-5"><a href="#cb14-5"></a></span>
+<span id="cb14-6"><a href="#cb14-6"></a><span class="co">// An embedder tells the compiler what types we want all errors to embed to</span></span>
+<span id="cb14-7"><a href="#cb14-7"></a><span class="kw">implicit</span> <span class="kw">val</span> embedder: Embedder[OneOf3[E1, E2, E3]] = Embedder.<span class="fu">make</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a></span>
+<span id="cb14-9"><a href="#cb14-9"></a><span class="kw">val</span> result: IO[OneOf3[E1, E2, E3], Unit] = <span class="kw">for</span> {</span>
+<span id="cb14-10"><a href="#cb14-10"></a>  _ &lt;- ioE1.<span class="fu">embedError</span></span>
+<span id="cb14-11"><a href="#cb14-11"></a>  _ &lt;- ioE23.<span class="fu">embedError</span></span>
+<span id="cb14-12"><a href="#cb14-12"></a>} <span class="kw">yield</span> ()</span></code></pre></div>
 </section><section id="interfacing-with-sealed-trait-errors" class="slide level2">
 <h2>Interfacing with sealed trait errors</h2>
 <p>Easy conversion from/to sealed traits</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">import</span> hotpotato._</span>
-<span id="cb14-2"><a href="#cb14-2"></a></span>
-<span id="cb14-3"><a href="#cb14-3"></a><span class="co">// Recall that E1, E2 and E3 all extends AllErrors</span></span>
-<span id="cb14-4"><a href="#cb14-4"></a><span class="kw">val</span> ioAllErrors: IO[AllErrors, String] = ???</span>
-<span id="cb14-5"><a href="#cb14-5"></a></span>
-<span id="cb14-6"><a href="#cb14-6"></a><span class="kw">val</span> ioE123: IO[OneOf3[E1, E2, E3], String] = ioAllErrors.<span class="fu">errorAsCoproduct</span></span>
-<span id="cb14-7"><a href="#cb14-7"></a></span>
-<span id="cb14-8"><a href="#cb14-8"></a><span class="kw">val</span> ioAllErrorsAgain: IO[AllErrors, String] = ioE123.<span class="fu">unifyError</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">import</span> hotpotato._</span>
+<span id="cb15-2"><a href="#cb15-2"></a></span>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="co">// Recall that E1, E2 and E3 all extends AllErrors</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="kw">val</span> ioAllErrors: IO[AllErrors, String] = ???</span>
+<span id="cb15-5"><a href="#cb15-5"></a></span>
+<span id="cb15-6"><a href="#cb15-6"></a><span class="kw">val</span> ioE123: IO[OneOf3[E1, E2, E3], String] = ioAllErrors.<span class="fu">errorAsCoproduct</span></span>
+<span id="cb15-7"><a href="#cb15-7"></a></span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="kw">val</span> ioAllErrorsAgain: IO[AllErrors, String] = ioE123.<span class="fu">unifyError</span></span></code></pre></div>
 </section><section id="summary" class="slide level2">
 <h2>Summary</h2>
 <style>
 .dark {
-background-color: darkgrey;
+background-color: #6baaf7;
 }
 .bold {
 font-weight: bold;
@@ -390,7 +415,7 @@ overflow: hidden;
 margin: 0!important;;
 }
 </style>
-<table class="text-centered">
+<table class="text-centered" style="border-radius: 6px;overflow: hidden;">
 <thead>
 <tr>
 <td>
@@ -405,7 +430,7 @@ EitherT
 ZIO
 </td>
 <td class="dark">
-Hotpotato
+With Hotpotato
 </td>
 </tr>
 </thead>
@@ -425,7 +450,7 @@ Composable
 </tr>
 <tr>
 <td class="dark">
-Error Type Unification
+Error type unification
 </td>
 <td class="yes">
 </td>
@@ -434,6 +459,19 @@ Error Type Unification
 <td class="yes">
 </td>
 <td class="hmm">
+</td>
+</tr>
+<tr>
+<td class="dark">
+Open error union
+</td>
+<td class="yes">
+</td>
+<td class="no">
+</td>
+<td class="no">
+</td>
+<td class="yes">
 </td>
 </tr>
 <tr>
@@ -476,6 +514,9 @@ Handling - Partial
 </div>
 </section><section id="thank-you" class="slide level2">
 <h2>Thank you!</h2>
+<ul>
+<li>Twitter / Github: <span class="citation" data-cites="jatcwang">@jatcwang</span></li>
+</ul>
 </section><section id="why-sealed-trait-isnt-enough" class="slide level2">
 <h2>Why sealed trait isn’t enough</h2>
 <p>Let’s look at an example</p>
@@ -493,21 +534,21 @@ Handling - Partial
 <p><img class="no-box" width="600px" src="assets/images/callgraph_simple.svg" /></p>
 </div>
 <div class="no-box">
-<div class="sourceCode" id="cb15"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> B1Errors</span>
-<span id="cb15-2"><a href="#cb15-2"></a><span class="kw">sealed</span> <span class="kw">trait</span> B2Errors</span>
-<span id="cb15-3"><a href="#cb15-3"></a></span>
-<span id="cb15-4"><a href="#cb15-4"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Conflict</span>() <span class="kw">extends</span> B1Errors <span class="kw">with</span> B2Errors</span>
-<span id="cb15-5"><a href="#cb15-5"></a><span class="kw">case</span> <span class="kw">class</span> NotFound() <span class="kw">extends</span> B1Errors</span>
-<span id="cb15-6"><a href="#cb15-6"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Unauthorized</span>() <span class="kw">extends</span> B2Errors</span></code></pre></div>
-</div>
-</section><section class="slide level2">
-
 <div class="sourceCode" id="cb16"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> B1Errors</span>
 <span id="cb16-2"><a href="#cb16-2"></a><span class="kw">sealed</span> <span class="kw">trait</span> B2Errors</span>
 <span id="cb16-3"><a href="#cb16-3"></a></span>
 <span id="cb16-4"><a href="#cb16-4"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Conflict</span>() <span class="kw">extends</span> B1Errors <span class="kw">with</span> B2Errors</span>
 <span id="cb16-5"><a href="#cb16-5"></a><span class="kw">case</span> <span class="kw">class</span> NotFound() <span class="kw">extends</span> B1Errors</span>
 <span id="cb16-6"><a href="#cb16-6"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Unauthorized</span>() <span class="kw">extends</span> B2Errors</span></code></pre></div>
+</div>
+</section><section class="slide level2">
+
+<div class="sourceCode" id="cb17"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> B1Errors</span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="kw">sealed</span> <span class="kw">trait</span> B2Errors</span>
+<span id="cb17-3"><a href="#cb17-3"></a></span>
+<span id="cb17-4"><a href="#cb17-4"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Conflict</span>() <span class="kw">extends</span> B1Errors <span class="kw">with</span> B2Errors</span>
+<span id="cb17-5"><a href="#cb17-5"></a><span class="kw">case</span> <span class="kw">class</span> NotFound() <span class="kw">extends</span> B1Errors</span>
+<span id="cb17-6"><a href="#cb17-6"></a><span class="kw">case</span> <span class="kw">class</span> <span class="fu">Unauthorized</span>() <span class="kw">extends</span> B2Errors</span></code></pre></div>
 <div>
 <ul>
 <li class="fragment">

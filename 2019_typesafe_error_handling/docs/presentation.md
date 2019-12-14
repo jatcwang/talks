@@ -1,12 +1,8 @@
 # Adventures in type-safe error handling
 
-## About me
+--- 
 
-- Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/>
-- Types, FP and other tools that make me more productive
-- @jatcwang
-
-## Error handling - A whirlwind tour
+How do we handle errors in Scala today?
 
 ## Either[+E, +A]
 
@@ -34,11 +30,11 @@ val result: Either[AllErrors, Unit] =
 
 </div>
 
-* Covariant - Compiler will find **Least Upper Bound** (LUB) to make the error type converge
+* Covariant - Compiler will find **Least Upper Bound** (LUB) to reconcile the error type 
 
-## Cats IO[A] / Future[A]
+## Cats IO[A]
 
-* Any **IO[A]** can fail with a **Throwable**
+* Any **IO[A]** can fail with a **Throwable** using **IO.raiseError**
 * Have to rely on documentation, not types
 
 <div class="fragment">
@@ -58,6 +54,31 @@ val ioResult: IO[Unit] =
 ```
 
 </div>
+
+--- 
+
+### Either in IO
+
+> * Need to check the **Either** result from the previous step
+> * Error prone and verbose - Not recommended
+
+```scala mdoc:compile-only
+def io1: IO[Either[E1, Unit]] = ???
+def io2: IO[Either[E2, Unit]] = ???
+
+for {
+  result <- io1
+  result2 <- result match {
+    case Left(e1) => IO.pure(Left(e1))
+    case Right(_) => io2
+  }
+} yield {
+  result2 match {
+    case Left(e2) => Left(e2)
+    case Right(_) => Right(())
+  }
+}
+```
 
 ## EitherT[IO, E, A]
 
@@ -84,20 +105,11 @@ val eitherTResult: EitherT[IO, AllErrors, Unit] =
 </div>
 
 * Invariant - no auto upcasting but you can use `leftWiden`
-* Still have IO's hidden (Throwable) way to terminate the execution
+* **IO.raiseError** reserved for defects or unhandleable errors
 
-## ZIO[-R, +E, +A]
+## Bifunctor IO[+E, +A] (ZIO)
 
-::: nonincremental
-
-<div class="fragment">
-
-* Similar to EitherT, but better ergonomic
-* Can terminate the execution chain with a `Throwable` ("Die")
-
-</div>
-
-:::
+> * Similar to EitherT, but better ergonomic
 
 <div class="fragment">
 
@@ -107,7 +119,6 @@ import com.example.Example._
 ```
 
 ```scala mdoc:compile-only
-// Note, this is ZIO's bifucntor IO, not cats.effect.IO
 def zio1: IO[E1, Unit] = ???
 def zio2: IO[E2, Unit] = ???
 
@@ -119,6 +130,12 @@ val eitherTResult: IO[AllErrors, Unit] =
 ```
 
 </div>
+
+* Can terminate the execution chain with a `Throwable` (**IO.die**)
+
+---
+
+---
 
 ## Java Checked Exceptions!
 
@@ -151,7 +168,7 @@ void allHandled() { // All errors handled!
 ## The trouble with checked exceptions
 
 * Not available in Scala 🙃
-* Errors are not return values. Doesn't compose well with libraries (Java 8 streams / lambdas)
+* Errors are not values. Doesn't work well with many newer language features such as anonymous functions
 * Type system special case - no abstraction or reuse
 
 ## But it has many cool ideas too
@@ -178,18 +195,19 @@ final case class E3() extends MyError
 
 ```scala mdoc
 import shapeless._
-type E12 = E1 :+: E2 :+: CNil
-// Similar to Either[E1, Either[E2, CNil]]
+type E123 = E1 :+: E2 :+: E3 :+: CNil
+// Similar to Either[E1, Either[E2, Either[E3, CNil]]
 
 import shapeless.syntax.inject._
 
-val e1InE12: E1 :+: E2 :+: CNil = E1().inject[E1 :+: E2 :+: CNil]
-val e2InE12: E1 :+: E2 :+: CNil = E2().inject[E1 :+: E2 :+: CNil]
+val e1InCoproduct: E1 :+: E2 :+: E3 :+: CNil = E1().inject[E1 :+: E2 :+: E3 :+: CNil]
+val e2InCoproduct: E1 :+: E2 :+: E3 :+: CNil = E2().inject[E1 :+: E2 :+: E3 :+: CNil]
 
-e1InE12 match {
+e2InCoproduct match {
   case Inl(E1()) => println("it's E1!")
   case Inr(Inl(E2())) => println("it's E2!")
-  case Inr(Inr(cnil)) => cnil.impossible // To satisfy exhaustiveness check
+  case Inr(Inr(Inl(E3()))) => println("it's E3!")
+  case Inr(Inr(Inr(cnil))) => cnil.impossible // To satisfy exhaustiveness check
 }
 ```
 
@@ -197,21 +215,34 @@ e1InE12 match {
 
 ## Coproducts are flexible!
 
-- E.g. Extract particular cases from a coproduct!
+Let's extract a particular cases from a coproduct!
 
 ```scala mdoc
 import shapeless.ops.coproduct._
 
 // Returns a Left(E1()) if we have an E1
-Remove[E1 :+: E2 :+: CNil, E1].apply(e1InE12)
+Remove[E1 :+: E2 :+: E3 :+: CNil, E1].apply(e1InCoproduct)
 
 // Otherwise return the rest in Right(..)
-Remove[E1 :+: E2 :+: CNil, E1].apply(e2InE12)
+Remove[E1 :+: E2 :+: E3 :+: CNil, E2].apply(e1InCoproduct)
 ```
+
+<div class="fragment">
+...and you can do many, many things with Coproducts!
+</div>
+
+---
+
+Using **Coproducts** directly feels cumbersome
+
+Can we make it nicer?
 
 ## Hotpotato
 
 A library for type-safe, ergonomic and readable error handling!
+
+* Based on Shapeless coproducts
+* Integrates with ZIO and Cats
 
 ## First, a bit of simplification
 
@@ -274,7 +305,7 @@ val result: IO[OneOf3[String, Int, E3], String] = ioE123.mapErrorSome(
 )
 ```
 
-## Effectful Error handling
+## Error handling with side-effects
 
 Very often error recovery/handling requires side-effect (e.g. logging)
 
@@ -331,7 +362,7 @@ val ioAllErrorsAgain: IO[AllErrors, String] = ioE123.unifyError
 
 <style>
   .dark {
-    background-color: darkgrey;
+    background-color: #6baaf7;
   }
   
   .bold {
@@ -386,14 +417,14 @@ val ioAllErrorsAgain: IO[AllErrors, String] = ioE123.unifyError
   
 </style>
 
-<table class="text-centered">
+<table class="text-centered" style="border-radius: 6px;overflow: hidden;">
     <thead>
         <tr>
           <td></td>
           <td class="dark">ChckEx</td>
           <td class="dark">EitherT</td>
           <td class="dark">ZIO</td>
-          <td class="dark">Hotpotato</td>
+          <td class="dark">With Hotpotato</td>
         </tr>
     </thead>
     <tbody>
@@ -405,11 +436,18 @@ val ioAllErrorsAgain: IO[AllErrors, String] = ioE123.unifyError
           <td class="yes"></td>
         </tr>
         <tr>
-          <td class="dark">Error Type Unification</td>
+          <td class="dark">Error type unification</td>
           <td class="yes"></td>
           <td class="emb"></td>
           <td class="yes"></td>
           <td class="hmm"></td>
+        </tr>
+        <tr>
+          <td class="dark">Open error union</td>
+          <td class="yes"></td>
+          <td class="no"></td>
+          <td class="no"></td>
+          <td class="yes"></td>
         </tr>
         <tr>
           <td class="dark">Handling - Exhaustive</td>
@@ -441,6 +479,8 @@ val ioAllErrorsAgain: IO[AllErrors, String] = ioE123.unifyError
 :::
 
 ## Thank you!
+
+> * Twitter / Github: @jatcwang
 
 ## Why sealed trait isn't enough
 
