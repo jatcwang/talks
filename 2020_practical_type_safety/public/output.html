@@ -99,229 +99,483 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div class="slides">
 
 
-<section><section id="practical-type-safety" class="title-slide slide level1"><h1>Practical Type Safety</h1></section><section class="slide level2">
-
+<section><section id="practical-type-safety" class="title-slide slide level1"><h1>Practical Type Safety</h1><p><img style="box-shadow: none;" src="./assets/images/lego.jpg" aria-details="https://www.tibco.com/blog/2015/05/05/lego-learning-the-building-blocks-of-data-visualization/" /></p>
+<p>Jacob Wang</p>
 <style>
 .no-box img {
 box-shadow: none!important;
 }
-</style>
-</section><section id="hello" class="slide level2">
+.slides {
+margin-top: 60px!important;
+}
+.reveal .slides h3 {
+margin-top: -20px;
+color: brown;
+text-transform: inherit;
+}
+</style></section><section id="hello" class="slide level2">
 <h2>Hello</h2>
+<div>
 <ul>
-<li class="fragment">Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
-<li class="fragment"><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
+<li>Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
+<li><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
 </ul>
+</div>
 </section><section id="this-talk" class="slide level2">
 <h2>This talk</h2>
+<div>
 <ul>
-<li class="fragment">The purpose of static types</li>
-<li class="fragment">Empower you to think for yourselves</li>
-<li class="fragment">Practical tips when working in Scala</li>
+<li><strong>Type Safety</strong> - What and why?</li>
+<li>Principles</li>
+<li>Practical techniques for Scala</li>
 </ul>
+</div>
+</section><section id="static-types-type-safety" class="slide level2">
+<h2>Static Types &amp; Type Safety</h2>
+<div>
+<ul>
+<div class="fragment">
+<li>
+Static types
+</li>
+<ul>
+<li>
+Prevent incorrect behaviour, without running the program
+</li>
+</ul>
+</div>
+<div class="fragment">
+<li>
+Type Safety is “how much” we take this approach
+</li>
+</div>
+</ul>
+</div>
+<aside class="notes">
+<p>Typesafety is the “how much” we try to maximise what the compiler can check for us</p>
+</aside>
 </section><section id="the-goal" class="slide level2">
 <h2>The Goal</h2>
 <p>What do we want as software developers?</p>
 <ul>
-<li class="fragment">Write correct, maintainable software faster</li>
-<li class="fragment">Static type system is one of the best way towards the goal</li>
-</ul>
-<div class="fragment">
-<div class="figure no-box" style="height: 335px; ">
-
-</div>
-</div>
-</section><section id="static-types-as-our-strategy" class="slide level2">
-<h2>Static types as our Strategy</h2>
+<li class="fragment">Write <strong>correct</strong> &amp; <strong>maintainable</strong> software <strong>faster</strong>!</li>
+<li class="fragment">I believe that a language with good <strong>static type systems</strong> really helps!
 <ul>
-<li class="fragment">Catch mistakes early, or prevent it!</li>
-<li class="fragment">Tooling
-<ul>
-<li class="fragment">e.g. Autocomplete, code browsing, refactoring</li>
-</ul></li>
-<li class="fragment">Helps
-<ul>
-<li class="fragment">Design &amp; write code</li>
-<li class="fragment">Understand the codebase</li>
+<li class="fragment">Tooling: Autocomplete, code browsing, refactoring</li>
+<li class="fragment">Understanding the code</li>
+<li class="fragment">Design &amp; Prototyping</li>
 </ul></li>
 </ul>
-</section><section id="i.-guard-against-change" class="slide level2">
+</section><section id="but.." class="slide level2">
+<h2>But..</h2>
+<ul>
+<li class="fragment">Consider the trade-offs
+<ul>
+<li class="fragment">Ergonomics (in the language you’re using)</li>
+<li class="fragment">Implementation Complexity / Time</li>
+<li class="fragment">Performance</li>
+<li class="fragment">Is it understandable?</li>
+<li class="fragment">Compile time</li>
+</ul></li>
+</ul>
+</section></section>
+<section><section id="principles-techniques" class="title-slide slide level1"><h1>Principles &amp; Techniques</h1></section><section id="i.-guard-against-change" class="slide level2">
 <h2>I. Guard against change</h2>
-<p>Many types of change:</p>
+<ul>
+<li class="fragment">Code is written once, and changed many times
 <ul>
 <li class="fragment">Change in requirement</li>
-<li class="fragment">Change in code architecture / code modelling</li>
+<li class="fragment">Change in code architecture (refactoring)</li>
+</ul></li>
+<li class="fragment"><strong>Want</strong>: Compile errors where our previous assumptions no longer holds
+<ul>
+<li class="fragment">Prompt us to reconsider the logic</li>
+</ul></li>
+<li class="fragment">“If I change a basic assumption I’m making here, will the compiler tell me?”</li>
 </ul>
-</section><section class="slide level2">
-
-<h3 id="avoid-default-case-class-fields-and-parameters">Avoid default case class fields and parameters</h3>
-<div class="fragment">
-<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(name: String, age: Int)</span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="co">// V2</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(name: String, age: Int, isAdmin: Boolean = <span class="kw">true</span>)</span></code></pre></div>
-</div>
-<div class="fragment">
-<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> <span class="fu">createFromLegacyUser</span>(legacyUser: LegacyUser): User = {</span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="fu">User</span>(legacyUser.<span class="fu">name</span>, legacyUser.<span class="fu">age</span>)</span>
-<span id="cb2-3"><a href="#cb2-3"></a>}</span></code></pre></div>
-</div>
-</section><section class="slide level2">
-
-<h3 id="avoid-default-case-class-fields-and-parameters-1">Avoid default case class fields and parameters</h3>
-<p>Use explicitly named values/functions</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(name: String, age: Int, isAdmin: Boolean)</span>
-<span id="cb3-2"><a href="#cb3-2"></a></span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">object</span> User {</span>
-<span id="cb3-4"><a href="#cb3-4"></a>  <span class="kw">def</span> <span class="fu">withDefault</span>(name: String, age: Int, isAdmin: Boolean = <span class="kw">true</span>): User</span>
-<span id="cb3-5"><a href="#cb3-5"></a>}</span></code></pre></div>
-</section><section class="slide level2">
-
+</section><section id="i.-guard-against-change-1" class="slide level2">
+<h2>I. Guard against change</h2>
 <h3 id="avoid-catch-alls-in-pattern-matching">Avoid catch-alls in pattern matching</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> User {</span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="kw">def</span> name: String</span>
-<span id="cb4-3"><a href="#cb4-3"></a>}</span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Guest</span>(name: String) <span class="kw">extends</span> User</span>
-<span id="cb4-5"><a href="#cb4-5"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> Member(name: String) <span class="kw">extends</span> User</span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Admin</span>(name: String, isSuperAdmin: Boolean) <span class="kw">extends</span> User</span>
-<span id="cb4-7"><a href="#cb4-7"></a></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="kw">def</span> <span class="fu">canEdit</span>(role: User): Boolean = {</span>
-<span id="cb4-9"><a href="#cb4-9"></a>  role <span class="kw">match</span> {</span>
-<span id="cb4-10"><a href="#cb4-10"></a>    <span class="kw">case</span> _: Guest =&gt; <span class="kw">false</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a>    <span class="kw">case</span> _     =&gt; <span class="kw">true</span></span>
-<span id="cb4-12"><a href="#cb4-12"></a>  }</span>
-<span id="cb4-13"><a href="#cb4-13"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> User {</span>
+<span id="cb1-2"><a href="#cb1-2"></a>  <span class="kw">def</span> name: String</span>
+<span id="cb1-3"><a href="#cb1-3"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Guest</span>(name: String) <span class="kw">extends</span> User</span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> Member(name: String) <span class="kw">extends</span> User</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Admin</span>(name: String, level: Int) <span class="kw">extends</span> User</span>
+<span id="cb1-7"><a href="#cb1-7"></a></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="kw">def</span> <span class="fu">canEdit</span>(role: User): Boolean = {</span>
+<span id="cb1-9"><a href="#cb1-9"></a>  role <span class="kw">match</span> {</span>
+<span id="cb1-10"><a href="#cb1-10"></a>    <span class="kw">case</span> _: Guest =&gt; <span class="kw">false</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a>    <span class="kw">case</span> _     =&gt; <span class="kw">true</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>  }</span>
+<span id="cb1-13"><a href="#cb1-13"></a>}</span></code></pre></div>
 <div class="fragment">
-<p>Bug if we add another role which should not be able to edit</p>
+<p>Bug if we add another role that isn’t allowed to edit!</p>
 </div>
-</section><section class="slide level2">
-
-<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">def</span> <span class="fu">canEditV2</span>(role: User): Boolean = {</span>
-<span id="cb5-2"><a href="#cb5-2"></a>  role <span class="kw">match</span> {</span>
-<span id="cb5-3"><a href="#cb5-3"></a>    <span class="kw">case</span> _: Guest =&gt; <span class="kw">false</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a>    <span class="kw">case</span> u @ (_: Member | _: Admin) =&gt; <span class="kw">true</span> <span class="co">// Can access u.name!</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a>  }</span>
-<span id="cb5-6"><a href="#cb5-6"></a>}</span></code></pre></div>
+</section><section id="i.-guard-against-change-2" class="slide level2">
+<h2>I. Guard against change</h2>
+<h3 id="avoid-catch-alls-in-pattern-matching-1">Avoid catch-alls in pattern matching</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> <span class="fu">canEditV2</span>(role: User): Boolean = {</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  role <span class="kw">match</span> {</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    <span class="kw">case</span> _: Guest =&gt; <span class="kw">false</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>    <span class="kw">case</span> u @ (_: Member | _: Admin) =&gt; {</span>
+<span id="cb2-5"><a href="#cb2-5"></a>      <span class="co">// u is a User</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>      <span class="co">// useful if you want to access fields on User class</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a>      <span class="kw">true</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>    }</span>
+<span id="cb2-9"><a href="#cb2-9"></a>  }</span>
+<span id="cb2-10"><a href="#cb2-10"></a>}</span></code></pre></div>
+</section><section id="i.-guard-against-change-3" class="slide level2">
+<h2>I. Guard against change</h2>
+<h3 id="avoid-default-parameters">Avoid default parameters</h3>
+<div class="fragment">
+<div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1"></a><span class="co">// Version 1</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(name: String, age: Int)</span>
+<span id="cb3-3"><a href="#cb3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co">// Version 2</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(name: String, age: Int, isAdmin: Boolean = <span class="kw">false</span>)</span></code></pre></div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">def</span> <span class="fu">createFromLegacyUser</span>(legacyUser: LegacyUser): User = {</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">User</span>(legacyUser.<span class="fu">name</span>, legacyUser.<span class="fu">age</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a>}</span></code></pre></div>
+</div>
+</section><section id="i.-guard-against-change-4" class="slide level2">
+<h2>I. Guard against change</h2>
+<h3 id="avoid-default-parameters-1">Avoid default parameters</h3>
+<p>Use explicitly named values/functions</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">User</span>(name: String, age: Int, isAdmin: Boolean)</span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">object</span> User {</span>
+<span id="cb5-4"><a href="#cb5-4"></a>  <span class="kw">val</span> defaultUser: User = ...</span>
+<span id="cb5-5"><a href="#cb5-5"></a>  <span class="co">// or</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>  <span class="kw">def</span> <span class="fu">notAdmin</span>(name: String, age: Int, isAdmin: Boolean = <span class="kw">true</span>): User</span>
+<span id="cb5-7"><a href="#cb5-7"></a>}</span></code></pre></div>
+</section><section id="i.-guard-against-change-5" class="slide level2">
+<h2>I. Guard against change</h2>
+<h3 id="avoid-tostring">Avoid toString</h3>
+<ul>
+<li class="fragment">Pervasive use of <strong>toString</strong> leads to bugs and bad logs because <strong>toString</strong> is callable on everything!</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Vacancy</span>(job: String, since: Instant)</span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">// Usage</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="fu">Url</span>(s<span class="st">&quot;company.com/create_vacancy/${vacancy.job}&quot;</span>).<span class="fu">post</span>.<span class="fu">send</span>()</span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">// POST https://company.com/create_vacancy/engineer</span></span></code></pre></div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Job</span>(name: String, category: JobCategory)</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Vacancy</span>(job: Job, since: Instant)</span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="co">// Oops</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="co">// POST https://company.com/create_vacancy/Job(engineer, 2019-01-01T00:00:00Z)</span></span></code></pre></div>
+</div>
+</section><section id="i.-guard-against-change-6" class="slide level2">
+<h2>I. Guard against change</h2>
+<h3 id="avoid-tostring-1">Avoid toString</h3>
+<p>Solution 1:</p>
+<ul>
+<li class="fragment">Use a custom interpolator that only allows <code>String</code> parameters,</li>
+<li class="fragment">Explicit conversion to String</li>
+<li class="fragment">Don’t use toString unless you’re forced to (e.g. Int)</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1"></a><span class="co">// Compile error! vacancy.job is not a String!</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="fu">Url</span>(str<span class="st">&quot;company.com/create_vacancy/${vacancy.job}&quot;</span>).<span class="fu">post</span>.<span class="fu">send</span>()</span>
+<span id="cb8-3"><a href="#cb8-3"></a></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="co">// Compiles, all interpolated values are type String!</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="fu">Url</span>(str<span class="st">&quot;company.com/create_vacancy/${vacancy.job.name}&quot;</span>).<span class="fu">post</span>.<span class="fu">send</span>()</span></code></pre></div>
+</div>
+</section><section id="i.-guard-against-change-7" class="slide level2">
+<h2>I. Guard against change</h2>
+<h3 id="avoid-tostring-2">Avoid toString</h3>
+<p>Solution 2: Custom typeclass</p>
+<ul>
+<li class="fragment">Write custom typeclass e.g. <code>UrlShow</code></li>
+<li class="fragment">Provide typeclasses instances for types that are safe to be printed</li>
+<li class="fragment">Scala allow custom string interpolators (For example see <code>cats.Show</code>)</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">Url</span>(url<span class="st">&quot;company.com/jobs/${vacancy.job.value}?page=${someNumber}&quot;</span>).<span class="fu">get</span>.<span class="fu">send</span>()</span></code></pre></div>
+</div>
 </section><section id="ii.-make-it-easy-to-do-the-right-thing" class="slide level2">
 <h2>II. Make it easy to do the right thing</h2>
 <p>…and hard to make mistakes</p>
-<div class="fragment">
-<p>Use types &amp; language features help you write the correct code</p>
-</div>
-</section><section class="slide level2">
-
-<h3 id="newtypes-opaque-types">“Newtypes” / Opaque types</h3>
+<ul>
+<li class="fragment">Use types &amp; language features as guard rails</li>
+</ul>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-1" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="newtypes">Newtypes</h3>
 <p>Wrap existing types in a new class</p>
+<div class="fragment">
+<div>
 <ul>
-<li class="fragment">Readability</li>
-<li class="fragment">Avoid mistakes when using the type</li>
-<li class="fragment">Enforce additional constraints</li>
+<li>Readability - Domain concepts!</li>
+<li>Avoid mistakes</li>
+<li>Improves refactoring</li>
+<li>Enforce additional constraints</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Directory</span>(id: UUID, parentId: Option[UUID], name: String)</span>
-<span id="cb6-2"><a href="#cb6-2"></a></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">// Safer and more readable</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Directory</span>(id: DirectoryId, parentId: Option[DirectoryId], name: DirectoryName)</span></code></pre></div>
-</section><section class="slide level2">
-
-</section><section class="slide level2">
-
-<h4 id="simple-newtype">Simple newtype</h4>
-<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">DirectoryId</span>(uuid: UUID) <span class="kw">extends</span> AnyVal </span>
-<span id="cb7-2"><a href="#cb7-2"></a></span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="co">// Use it</span></span>
-<span id="cb7-4"><a href="#cb7-4"></a><span class="kw">val</span> dirId = <span class="fu">DirectoryId</span>(someUuid)</span></code></pre></div>
-<ul>
-<li class="fragment"><code>AnyVal</code> can help avoiding an actual <code>DirectoryId</code> class most of the time.
-<ul>
-<li class="fragment">Reduce allocations and thus less GC</li>
-</ul></li>
-</ul>
-<h4 id="newtype-with-constraints">Newtype with constraints</h4>
-<ul>
-<li class="fragment">Requirements:
-<ul>
-<li class="fragment">When you see a <code>DirectoryName</code>, you know it is not-empty</li>
-<li class="fragment">No way to cheat around validation (No direct <code>new</code>, <code>copy</code>)</li>
-<li class="fragment">Still get extractors and <code>equals</code></li>
-</ul></li>
-</ul>
-<div class=""fragment">
-
-```scala
-final class private DirectoryName // Need to implement equals manually :(
-final case class DirectoryName private (str: String) // .copy still accessible :(
-```
-
 </div>
-</section><section class="slide level2">
+</div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-2" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="newtypes-1">Newtypes</h3>
+<p>Which is easier to use and understand?</p>
+<style>
+.flex-container {
+display: flex;
+justify-content: center;
+}
+.half {
+width: 40%;
+}
+.half .sourceCode {
+padding: 5px;
+}
+</style>
+<div class="flex-container">
 
-<h4 id="newtype-with-constraints-1">Newtype with constraints</h4>
-<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1"></a><span class="co">// No new/apply, no subclassing (outside this file), no copy</span></span>
-<span id="cb8-2"><a href="#cb8-2"></a><span class="co">// Extractors, .equals are available</span></span>
-<span id="cb8-3"><a href="#cb8-3"></a><span class="kw">sealed</span> <span class="kw">abstract</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">DirectoryName</span>(str: String)</span>
-<span id="cb8-4"><a href="#cb8-4"></a></span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="kw">object</span> DirectoryName {</span>
-<span id="cb8-6"><a href="#cb8-6"></a>  <span class="kw">def</span> <span class="fu">fromString</span>(str: String): Either[DirectoryNameError, DirectoryName] = {</span>
-<span id="cb8-7"><a href="#cb8-7"></a>    <span class="kw">if</span> (str.<span class="fu">empty</span>)</span>
-<span id="cb8-8"><a href="#cb8-8"></a>      <span class="fu">Left</span>(DirectoryNameError.<span class="fu">StringIsEmpty</span>)</span>
-<span id="cb8-9"><a href="#cb8-9"></a>    <span class="kw">else</span></span>
-<span id="cb8-10"><a href="#cb8-10"></a>      <span class="co">// Use anonymous subclass (allowed only in this file) </span></span>
-<span id="cb8-11"><a href="#cb8-11"></a>      <span class="co">// to create an instance</span></span>
-<span id="cb8-12"><a href="#cb8-12"></a>      <span class="fu">Right</span>(<span class="kw">new</span> <span class="fu">DirectoryName</span>(str) {})</span>
-<span id="cb8-13"><a href="#cb8-13"></a>  }</span>
-<span id="cb8-14"><a href="#cb8-14"></a></span>
-<span id="cb8-15"><a href="#cb8-15"></a>  <span class="co">// For tests or parsing from trusted/validated sources (e.g. Database)</span></span>
-<span id="cb8-16"><a href="#cb8-16"></a>  <span class="kw">def</span> <span class="fu">fromStringUnsafe</span>(str: String): DirectoryName = {</span>
-<span id="cb8-17"><a href="#cb8-17"></a>    <span class="fu">fromString</span>(str).<span class="fu">getOrElse</span>(e =&gt; <span class="kw">throw</span> e)</span>
-<span id="cb8-18"><a href="#cb8-18"></a>  } </span>
-<span id="cb8-19"><a href="#cb8-19"></a>}</span></code></pre></div>
-</section><section class="slide level2">
-
-<h3 id="use-named-parameters">Use named parameters</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">def</span> <span class="fu">calculateTotal</span>(</span>
-<span id="cb9-2"><a href="#cb9-2"></a>  items: List[Item],</span>
-<span id="cb9-3"><a href="#cb9-3"></a>  addTax: Boolean,</span>
-<span id="cb9-4"><a href="#cb9-4"></a>  addServiceCharge: Boolean</span>
-<span id="cb9-5"><a href="#cb9-5"></a>)</span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">def</span> <span class="fu">printReceipt</span>(items: List[Item], options: PrintOption)</span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="fu">calculateTotal</span>(</span>
-<span id="cb10-3"><a href="#cb10-3"></a>  items,</span>
-<span id="cb10-4"><a href="#cb10-4"></a>  options.<span class="fu">addServiceCharge</span>, <span class="co">// oops</span></span>
-<span id="cb10-5"><a href="#cb10-5"></a>  options.<span class="fu">addTax</span>,</span>
+<div class="half">
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Directory</span>(</span>
+<span id="cb10-2"><a href="#cb10-2"></a>  id: UUID,</span>
+<span id="cb10-3"><a href="#cb10-3"></a>  ownerId: UUID,</span>
+<span id="cb10-4"><a href="#cb10-4"></a>  parentId: Option[UUID],</span>
+<span id="cb10-5"><a href="#cb10-5"></a>  name: String</span>
 <span id="cb10-6"><a href="#cb10-6"></a>)</span></code></pre></div>
-</section><section class="slide level2">
-
-<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">def</span> <span class="fu">printReceipt</span>(items: List[Item], options: PrintOption)</span>
-<span id="cb11-2"><a href="#cb11-2"></a><span class="fu">calculateTotal</span>(</span>
-<span id="cb11-3"><a href="#cb11-3"></a>  items,</span>
-<span id="cb11-4"><a href="#cb11-4"></a>  addServiceCharge = options.<span class="fu">addServiceCharge</span>,</span>
-<span id="cb11-5"><a href="#cb11-5"></a>  addTax = options.<span class="fu">addTax</span>,</span>
+</div>
+<div class="half">
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Directory</span>(</span>
+<span id="cb11-2"><a href="#cb11-2"></a>  id: DirectoryId,</span>
+<span id="cb11-3"><a href="#cb11-3"></a>  ownerId: UserId,</span>
+<span id="cb11-4"><a href="#cb11-4"></a>  parentId: Option[DirectoryId],</span>
+<span id="cb11-5"><a href="#cb11-5"></a>  name: DirectoryName</span>
 <span id="cb11-6"><a href="#cb11-6"></a>)</span></code></pre></div>
-</section><section id="iii.-dont-lie" class="slide level2">
-<h2>III. Don’t lie</h2>
+</div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-3" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="newtypes-2">Newtypes</h3>
+<p>How?</p>
+<div class="fragment">
+<div>
 <ul>
-<li class="fragment"><p>Types enables abstractions Type signature communicates what a piece of code can and cannot do.</p></li>
-<li class="fragment"><p><strong>List[T]</strong></p></li>
+<li>Scala 2: <strong>Case class + AnyVal</strong>, or <a href="https://github.com/estatico/scala-newtype">newtype</a> library</li>
+<li>Scala 3: <strong>Opaque Type</strong></li>
 </ul>
-<div class="sourceCode" id="cb12"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">def</span> transform[T](list: List[T]): List[T] = {</span>
-<span id="cb12-2"><a href="#cb12-2"></a>  list <span class="kw">match</span> {</span>
-<span id="cb12-3"><a href="#cb12-3"></a>    <span class="kw">case</span> (s: String) :: Nil =&gt; list.<span class="fu">headOption</span>.<span class="fu">toList</span></span>
-<span id="cb12-4"><a href="#cb12-4"></a>    <span class="kw">case</span> s :: Nil =&gt; list</span>
-<span id="cb12-5"><a href="#cb12-5"></a>    <span class="kw">case</span> _ =&gt; list</span>
-<span id="cb12-6"><a href="#cb12-6"></a>  }</span>
-<span id="cb12-7"><a href="#cb12-7"></a>}</span></code></pre></div>
-<p>FIXME parametricity</p>
-</section></section>
-<section><section id="conclusion" class="title-slide slide level1"><h1>Conclusion</h1><p>Fixme * it’s about trust in the abstractions</p></section><section id="fixme" class="slide level2">
-<h2>FIXME</h2>
-<p>Principles: - A semantic code change should be compile errors</p>
+</div>
+</div>
+<div class="fragment" style="margin: 20px 0 20px 0;">
+<div class="sourceCode" id="cb12"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">DirectoryId</span>(uuid: UUID) <span class="kw">extends</span> AnyVal </span>
+<span id="cb12-2"><a href="#cb12-2"></a></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="co">// Use it like any other case class</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="fu">DirectoryId</span>(someUuid)</span></code></pre></div>
+</div>
+<div class="fragment">
+<div>
 <ul>
-<li class="fragment"><p>Avoid default parameters</p></li>
-<li class="fragment"><p>Use named parameters</p></li>
-<li class="fragment"><p>Make illegal state unrepresentable</p></li>
-<li class="fragment"><p>New type wrappers (including unsafeFromString)</p></li>
+<li><strong>AnyVal</strong> will avoid allocating the wrapper class*
+<ul>
+<li>Reduce allocations (GC) and indirection</li>
+<li>*Allocations are still incurred in some cases</li>
+</ul></li>
+<li><strong>newtype</strong> library does not suffer from this issue</li>
+</ul>
+</div>
+</div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-4" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="newtypes-with-constraints">Newtypes with constraints</h3>
+<p>Enforce constraints using wrapper classes</p>
+<div class="fragment">
+<div>
+<ul>
+<li>We want:
+<ul>
+<li>No direct construction (<code>new</code>, <code>apply</code>) nor <code>copy</code></li>
+<li><code>unapply</code>, <code>hashCode</code> and <code>equals</code></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb13"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">final</span> <span class="kw">class</span> <span class="kw">private</span> DirectoryName <span class="co">// Need to implement equals manually :(</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="kw">final</span> <span class="kw">case</span> <span class="kw">class</span> DirectoryName <span class="kw">private</span> (str: String) <span class="co">// .copy still accessible :(</span></span></code></pre></div>
+</div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-5" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="newtypes-with-constraints-1">Newtypes with constraints</h3>
+<p>Introducing <code>sealed abstract case class</code>!!</p>
+<ul>
+<li class="fragment">No <code>copy</code>, <code>new</code> nor <code>apply</code></li>
+<li class="fragment"><code>unapply</code>, <code>equals</code>, <code>hashCode</code> still works</li>
+</ul>
+<div class="fragment">
+<div>
+<p>Recommendation:</p>
+<ul>
+<li>A validated construction function
+<ul>
+<li>Returns <strong>Either / Validated (cats)</strong></li>
+</ul></li>
+<li>An unsafe construction (explicitly marked unsafe)
+<ul>
+<li>Throws exception if an invalid input is provided</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-6" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="newtypes-with-constraints-2">Newtypes with constraints</h3>
+<div class="fragment">
+<div class="sourceCode" id="cb14"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">sealed</span> <span class="kw">abstract</span> <span class="kw">case</span> <span class="kw">class</span> <span class="fu">DirectoryName</span>(strValue: String)</span>
+<span id="cb14-2"><a href="#cb14-2"></a></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="kw">object</span> DirectoryName {</span>
+<span id="cb14-4"><a href="#cb14-4"></a>  <span class="kw">def</span> <span class="fu">fromString</span>(str: String): Either[DirectoryNameError, DirectoryName] = {</span>
+<span id="cb14-5"><a href="#cb14-5"></a>    <span class="kw">if</span> (str.<span class="fu">isEmpty</span>)</span>
+<span id="cb14-6"><a href="#cb14-6"></a>      <span class="fu">Left</span>(DirectoryNameError.<span class="fu">StringIsEmpty</span>)</span>
+<span id="cb14-7"><a href="#cb14-7"></a>    <span class="kw">else</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a>      <span class="co">// Use anonymous subclass (allowed only in this file) to create an instance</span></span>
+<span id="cb14-9"><a href="#cb14-9"></a>      <span class="fu">Right</span>(<span class="kw">new</span> <span class="fu">DirectoryName</span>(str) {}) <span class="co">// ###</span></span>
+<span id="cb14-10"><a href="#cb14-10"></a>  }</span>
+<span id="cb14-11"><a href="#cb14-11"></a></span>
+<span id="cb14-12"><a href="#cb14-12"></a>  <span class="kw">import</span> cats.<span class="fu">syntax</span>.<span class="fu">either</span>._ <span class="co">// Provides .valueOr extension method</span></span>
+<span id="cb14-13"><a href="#cb14-13"></a>  <span class="co">// For tests or parsing from trusted/validated sources (e.g. Database)</span></span>
+<span id="cb14-14"><a href="#cb14-14"></a>  <span class="kw">def</span> <span class="fu">fromStringUnsafe</span>(str: String): DirectoryName = {</span>
+<span id="cb14-15"><a href="#cb14-15"></a>    <span class="fu">fromString</span>(str).<span class="fu">valueOr</span>(e  =&gt; <span class="kw">throw</span> e)</span>
+<span id="cb14-16"><a href="#cb14-16"></a>  } </span>
+<span id="cb14-17"><a href="#cb14-17"></a>}</span></code></pre></div>
+</div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-7" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="named-parameters">Named Parameters</h3>
+<p>Named parameters improves readability and help spot mistakes</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">def</span> <span class="fu">calculateTotal</span>(</span>
+<span id="cb15-2"><a href="#cb15-2"></a>  items: List[Item],</span>
+<span id="cb15-3"><a href="#cb15-3"></a>  addTax: Boolean,</span>
+<span id="cb15-4"><a href="#cb15-4"></a>  addServiceCharge: Boolean</span>
+<span id="cb15-5"><a href="#cb15-5"></a>)</span></code></pre></div>
+</section><section id="ii.-make-it-easy-to-do-the-right-thing-8" class="slide level2">
+<h2>II. Make it easy to do the right thing</h2>
+<h3 id="named-parameters-1">Named Parameters</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">def</span> <span class="fu">printReceipt</span>(items: List[Item], options: PrintOption)</span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="fu">calculateTotal</span>(</span>
+<span id="cb16-3"><a href="#cb16-3"></a>  items,</span>
+<span id="cb16-4"><a href="#cb16-4"></a>  options.<span class="fu">addServiceCharge</span>, <span class="co">// bug</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a>  options.<span class="fu">addTax</span>,</span>
+<span id="cb16-6"><a href="#cb16-6"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">def</span> <span class="fu">printReceipt</span>(items: List[Item], options: PrintOption)</span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="fu">calculateTotal</span>(</span>
+<span id="cb17-3"><a href="#cb17-3"></a>  items,</span>
+<span id="cb17-4"><a href="#cb17-4"></a>  addServiceCharge = options.<span class="fu">addTax</span>, <span class="co">// Aha!</span></span>
+<span id="cb17-5"><a href="#cb17-5"></a>  addTax = options.<span class="fu">addServiceCharge</span>,</span>
+<span id="cb17-6"><a href="#cb17-6"></a>)</span></code></pre></div>
+</section><section id="iii.-build-abstractions-with-types" class="slide level2">
+<h2>III. Build abstractions with types</h2>
+<ul>
+<li class="fragment">Use types to help build abstractions and communicate intent…and don’t lie!</li>
+<li class="fragment">Good abstractions
+<ul>
+<li class="fragment">Reduces cognitive overhead when reading code</li>
+<li class="fragment">Allows aggresive refactoring</li>
+</ul></li>
+</ul>
+</section><section id="iii.-build-abstractions-with-types-1" class="slide level2">
+<h2>III. Build abstractions with types</h2>
+<h3 id="parametricity">Parametricity</h3>
+<ul>
+<li class="fragment">Obeying what we know about a type</li>
+<li class="fragment">No reflections</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb18"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">def</span> f[T](list: List[T]): List[T]</span>
+<span id="cb18-2"><a href="#cb18-2"></a></span>
+<span id="cb18-3"><a href="#cb18-3"></a><span class="fu">f</span>(List(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)) </span>
+<span id="cb18-4"><a href="#cb18-4"></a><span class="co">// List(1)</span></span>
+<span id="cb18-5"><a href="#cb18-5"></a></span>
+<span id="cb18-6"><a href="#cb18-6"></a><span class="fu">f</span>(List(<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>)) </span>
+<span id="cb18-7"><a href="#cb18-7"></a><span class="co">// List(1.0)</span></span>
+<span id="cb18-8"><a href="#cb18-8"></a></span>
+<span id="cb18-9"><a href="#cb18-9"></a><span class="fu">f</span>(List(<span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span>)) </span>
+<span id="cb18-10"><a href="#cb18-10"></a><span class="co">// Nil ??!!!</span></span></code></pre></div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb19"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb19-1"><a href="#cb19-1"></a><span class="co">// Don&#39;t do this!</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>list <span class="kw">match</span> {</span>
+<span id="cb19-3"><a href="#cb19-3"></a>  <span class="kw">case</span> (s: String) :: rest =&gt; Nil</span>
+<span id="cb19-4"><a href="#cb19-4"></a>  <span class="kw">case</span> s :: rest =&gt; List(s)</span>
+<span id="cb19-5"><a href="#cb19-5"></a>  <span class="co">// ...</span></span>
+<span id="cb19-6"><a href="#cb19-6"></a>}</span></code></pre></div>
+</div>
+</section><section id="iii.-build-abstractions-with-types-2" class="slide level2">
+<h2>III. Build abstractions with types</h2>
+<h3 id="parametricity-1">Parametricity</h3>
+<p>Solution: Use typeclasses! (or subtype constraints)</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">def</span> f[T](list: List[T])(<span class="kw">implicit</span> monoid: Monoid[T]): T = {</span>
+<span id="cb20-2"><a href="#cb20-2"></a>  <span class="co">// Might use &quot;empty&quot; and &quot;combine&quot; from the Monoid typeclass instance of T</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a>}</span></code></pre></div>
+</section><section id="iii.-build-abstractions-with-types-3" class="slide level2">
+<h2>III. Build abstractions with types</h2>
+<h3 id="use-an-io-type">Use an IO type!</h3>
+<p>Use a referentially transparent IO type as found in cats-effect, Monix or ZIO</p>
+<ul>
+<li class="fragment">Refactor freely because side-effect definition is separate from construction!</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb21"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb21-1"><a href="#cb21-1"></a><span class="co">// Refactoring this will change the behaviour :(</span></span>
+<span id="cb21-2"><a href="#cb21-2"></a><span class="kw">for</span> {</span>
+<span id="cb21-3"><a href="#cb21-3"></a>  _ &lt;- Future { <span class="fu">println</span>(<span class="st">&quot;hi&quot;</span>) }</span>
+<span id="cb21-4"><a href="#cb21-4"></a>  _ &lt;- Future { <span class="fu">println</span>(<span class="st">&quot;hi&quot;</span>) }</span>
+<span id="cb21-5"><a href="#cb21-5"></a>} <span class="kw">yield</span> ()</span></code></pre></div>
+</div>
+<ul>
+<li class="fragment">Cancellation, Retries, Parallelism</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb22"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb22-1"><a href="#cb22-1"></a><span class="co">// Usine ZIO</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="kw">def</span> task1: IO[Int] = IO { <span class="co">/* Side effect here */</span> }</span>
+<span id="cb22-3"><a href="#cb22-3"></a><span class="kw">def</span> tasks: List[IO[Int]] = List(task1, task2, task3)</span>
+<span id="cb22-4"><a href="#cb22-4"></a></span>
+<span id="cb22-5"><a href="#cb22-5"></a>ZIO.<span class="fu">sequence</span>(tasks)    <span class="co">// Sequential execution</span></span>
+<span id="cb22-6"><a href="#cb22-6"></a>ZIO.<span class="fu">sequencePar</span>(tasks) <span class="co">// Parallel execution</span></span>
+<span id="cb22-7"><a href="#cb22-7"></a>task1.<span class="fu">race</span>(task2)      <span class="co">// First success is returned, other is cancelled</span></span></code></pre></div>
+</div>
+</section><section id="recap" class="slide level2">
+<h2>Recap</h2>
+<ul>
+<li class="fragment">Guard against change</li>
+<li class="fragment">Make it easy to do the right thing</li>
+<li class="fragment">Build abstractions with types</li>
+</ul>
+<div class="fragment">
+<p>In practice:</p>
+</div>
+<ul>
+<li class="fragment">Avoid default parameters</li>
+<li class="fragment">Avoid catch-alls in pattern matching</li>
+<li class="fragment">Avoid toString</li>
+<li class="fragment">Newtypes</li>
+<li class="fragment">Used named parameters</li>
+<li class="fragment">Parametricity</li>
+<li class="fragment">Use IO</li>
+</ul>
+</section><section id="final-thoughts" class="slide level2">
+<h2>Final Thoughts</h2>
+<ul>
+<li class="fragment">Learn, but verify - “Does it really solve a problem for me?”</li>
+<li class="fragment">The principles applies to other languages too!</li>
+<li class="fragment">Always keep the trade-offs in mind</li>
 </ul>
 </section></section>
+<section id="references" class="title-slide slide level1"><h1>References</h1><div>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=GqmsQeSzMdw">Constraints Liberate, Liberties Constrain</a> by Rúnar Bjarnason</li>
+<li><a href="https://www.youtube.com/watch?v=GqmsQeSzMdw">Cats Effect: The IO Monad for Scala</a> by Gabriel Volpe</li>
+<li><a href="https://github.com/vovapolu/scaluzzi">Scaluzzi</a> - Linting rules with Scalafix</li>
+</ul>
+</div></section>
+<section id="thank-you" class="title-slide slide level1"><h1>Thank you!</h1></section>
     </div>
   </div>
 
@@ -334,6 +588,8 @@ final case class DirectoryName private (str: String) // .copy still accessible :
       Reveal.initialize({
         // Push each slide change to the browser history
         history: true,
+        // Vertical centering of slides
+        center: false,
         // Transition style
         transition: 'none', // none/fade/slide/convex/concave/zoom
         math: {
