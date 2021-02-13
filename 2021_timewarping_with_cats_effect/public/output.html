@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>presentation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="./revealjs/dist/reset.css">
+  <link rel="stylesheet" href="./revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="./revealjs/dist/theme/white.css" id="theme">
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section>
+<section id="time-warping-with-cats-effect" class="title-slide slide level1">
+<h1>Time-warping with Cats Effect</h1>
+<p>Jacob Wang</p>
+<style>
+  .no-box img {
+    box-shadow: none!important;
+  }
+  
+  .slides {
+    margin-top: 60px!important;
+  }
+  
+  .reveal .slides h3 {
+    margin-top: -20px;
+    color: brown;
+    text-transform: inherit;
+  }
+  
+</style>
+</section>
+<section id="hello" class="slide level2">
+<h2>Hello</h2>
+<div>
+<ul>
+<li>Scala Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
+<li><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
+</ul>
+</div>
+</section></section>
+    </div>
+  </div>
+
+  <script src="./revealjs/dist/reveal.js"></script>
+
+  // reveal.js plugins
+  <script src="./revealjs/plugin/notes/notes.js"></script>
+  <script src="./revealjs/plugin/search/search.js"></script>
+  <script src="./revealjs/plugin/zoom/zoom.js"></script>
+  <script src="./revealjs/plugin/math/math.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Vertical centering of slides
+        center: false,
+        // Transition style
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
