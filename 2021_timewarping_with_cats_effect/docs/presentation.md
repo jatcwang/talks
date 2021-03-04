@@ -21,10 +21,6 @@ Jacob Wang
     text-transform: none;
   }
 
-  .reveal ul {
-    margin-top: 10px;
-  }
-
   .reveal pre code {
     max-height: 800px;
   }
@@ -41,7 +37,7 @@ Jacob Wang
 
 ## It's Tuesday afternoon...
 
-- You just finished the beautiful data-processing pipeline using *fs2*, with windowed batched message acknowledgements,
+- You just finished the beautiful data-processing pipeline using **fs2**, with windowed batched message acknowledgements,
   exponential backoff on error, etc etc.
 - But how do you test it?
   
@@ -68,12 +64,16 @@ Jacob Wang
 
 ## Back to the basics
 
-In the beginning, we have `java.lang.Thread`
+In the beginning, there is `java.lang.Thread`
 
-- `new Thread(..)` creates a new JVM thread, backed by a native OS thread
-  - `thread.run()` executes the Runnable initially assigned to the thread
+- `new Thread(r: Runnable)` creates a new JVM thread, backed by a native OS thread
+  - `thread.run()` executes the Runnable
 - `Thread.sleep()` suspends the current thread's execution, and OS schedules other threads to run
+
+<div class="fragment">
+
 ```scala
+// java.lang.Runnable
 trait Runnable {
   def run(): Unit
 }
@@ -81,11 +81,13 @@ trait Runnable {
 val t = new Thread(new Runnable { 
   def run() = { 
     Thread.sleep(1000)
-    println("hi!") } 
+    println("hi!") 
   }
 )
 t.run() // "hi!" after a delay of ~1 second
 ```
+
+</div>
     
 ## What's wrong with Threads?
 
@@ -104,11 +106,14 @@ trait ExecutorService {
 }
 ```
 
-- A few **worker threads** take from a queue of **Runnables** and execute them
-- `ExecutionContext` is Scala's own simpler interface for the same idea
 
 <div class="fragment">
+A few **worker threads** take from a queue of **Runnables** and execute them
 <img style="width: 50%" src="./assets/images/threadpool.svg">
+</div>
+
+<div class="fragment">
+`ExecutionContext` is Scala's own simpler interface for the same idea
 </div>
 
 ## ScheduledExecutorService
@@ -157,6 +162,7 @@ class ControlledScheduledExecutorService extends ScheduledExecutorService {
   
   override def schedule(runnable: Runnable, delay: Long): Unit = // ...
 
+  // Move clock forward and run any Runnables that should happen during this period
   def tick(elapseTime: Long) = {
     currentTime = currentTime + elapseTime
     var nextTask = allTasks.findAndRemove(_.runAt <= currentTime)
@@ -168,18 +174,32 @@ class ControlledScheduledExecutorService extends ScheduledExecutorService {
 }
 ```
 
-## Time-warp complete!
+## It's warp time!
 
-And that's all there is to it!
+```scala
+val ctx = new ControlledScheduledExecutorService
+
+ctx.schedule(
+  new Runnable  { def run() = println("Warped!") },
+  1000
+) 
+
+// Nothing happens until we "tick" to the right time
+ctx.tick(200)
+ctx.tick(300)
+ctx.tick(500) // "Warped!"
+```
 
 - Evaluation depends on "what task is in the queue, and when should they be run", which means there's no difference between
   running 100 **Runnable** scheduled all within 1 millis or 1000 years!
-- "Great, but only cavemen use Runnables"
+
+<div class="fragment">
+<h3 color="red" style="margin-top: 50px;">"Great, but only cavemen use raw Runnables"</h3>
+</div>
   
 ## It's Runnables all the way down
 
-Almost all effect libraries / Futures ultimately ends up as **Runnables**
-being executed un by a thread pool.
+Almost all effect libraries / Futures ultimately ends up as **Runnables** being submitted to thread pools.
 
 ```scala
 implicit val ec: ExecutionContext = ...
@@ -192,37 +212,41 @@ Future {
 // Eventually translates to something like...
 ec.execute(new Runnable {
   def run() = {
+    
     val res = 1 + 1           // 1
+    
     ec.execute(new Runnable { // submit the "next step" back to the EC
       def run() = {
+        
         println(res)          // 2
+        
       }
     })
   }
 })
 ```
 
-- So the technique covered thus far can be applied everywhere!
-
 ## cats.effect TestContext
 
 `TestContext` is one implementation of controlled thread pool / scheduler
 
 - You can find it in `cats-effect-laws` library dependency
-  
+
+<div class="fragment">
+
 ```scala
     val testCtx = cats.effect.laws.util.TestContext() // TestContext <: ExecutionContext
     implicit val ctxShift: ContextShift[IO] = testCtx.ioContextShift
     implicit val timer: Timer[IO] = testCtx.ioTimer
 
-    val io = for {                                           // Step 1 Define the IO
+    val appLogic = for {                                           // Step 1 Define the IO
       _ <- IO { println("hi!") }
       _ <- IO.sleep(100.days)
       _ <- IO { println("I have awakened!") }
     }
 
     // execute our IO in the TestContext
-    ctxShift.evalOn(testCtx)(io).unsafeRunAsyncAndForget()   // Step 2 "run" the IO
+    ctxShift.evalOn(testCtx)(appLogic).unsafeRunAsyncAndForget()   // Step 2 "run" the IO
 
     println("Ticking 50 days..")                             // Step 3 time-warp!
     testCtx.tick(50.days) // "hi!" printed here
@@ -231,12 +255,14 @@ ec.execute(new Runnable {
     testCtx.tick(50.days) // "I have awakened!" is printed
 ``` 
 
+</div>
+
 ## Structuring your test
 
 How to structure our time-sensitive tests?
 
-* We have "app logic" and "assertions" (observer)
-* Run these two IOs in "parallel"
+* We create two IOs: "app logic" and "assertions" (observer)
+* Run these two IOs in "parallel" using the TestContext
 
 <div class="fragment">
 <img style="width: 60%" src="./assets/images/assertion_timings.svg">
@@ -245,6 +271,10 @@ How to structure our time-sensitive tests?
 ---
 
 ```scala
+val testContext = TestContext()
+implicit val contextShift: ContextShift[IO] = testContext.ioContextShift
+implicit val timer = testContext.ioTimer
+
 val appLogic: IO[Unit] = ???      // Step 1: Define Logic and Assertions
 val assertions: IO[Unit] = for {
   _ <- IO.sleep(5.seconds)
@@ -254,7 +284,6 @@ val assertions: IO[Unit] = for {
 } yield succeed
 
 // Step 2: Run it with test "framework" (reusable across test suites)
-val testContext = TestContext()
 val test = for {
   fibre <- appLogic.start // forks the app logic into the background
   _ <- IO.sleep(1.nanos) // very small delay to ensure assertions 
@@ -263,7 +292,7 @@ val test = for {
 } yield succeed
 
 // Step 3: "Execute" the test
-val f: Future[Assertion] = test.unsafeToFuture()
+val f: Future[Assertion] = cotextShift.evalOn(testContext)(test).unsafeToFuture()
 
 // Actually execute all the app logic and assertions
 // Note that assertions will terminate the appLogic when it is done
@@ -271,13 +300,15 @@ val f: Future[Assertion] = test.unsafeToFuture()
 testContext.tick(1000.days)
 ```
 
-## Final words
+## Final Tips
 
-- The underlying works is based on JVM primitives , you can time-warp with
-  Scala Future, Monix, ZIO, and Java `CompletableFuture` too ;)
+- Given two **Runnables** that should be run at the same time, TestContext randomize the order
+  - Good for catching race conditions
 - Since only TestContext is controlled, **ALL** your Runnables need to be submitted to it
   - Doobie Transactor, any `Future{..}/future.map`, etc etc
   - External libraries should allow you to specify a thread pool
+- The underlying mechanism is based on simple primitives , you can time-warp with
+  Scala Future, Monix, ZIO, and Java `CompletableFuture` too ;)
 
 ## Acknowledgements
 

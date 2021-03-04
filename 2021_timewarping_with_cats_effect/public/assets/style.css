@@ -2,8 +2,8 @@
 
 code:not(.sourceCode) {
   background: #eafff4;
-  border: 2px solid #eafff4;
-  border-radius: 10px;
+  border: 1.5px solid #eafff4;
+  border-radius: 5px;
 }
 
 .reveal section img {
