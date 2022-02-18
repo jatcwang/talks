@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="./revealjs/dist/reset.css">
   <link rel="stylesheet" href="./revealjs/dist/reveal.css">
   <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     span.underline{text-decoration: underline;}
@@ -89,7 +92,8 @@
 
 
 <section>
-<section id="time-warping-with-cats-effect" class="title-slide slide level1">
+<section id="time-warping-with-cats-effect"
+class="title-slide slide level1">
 <h1>Time-warping with Cats Effect</h1>
 <p>Jacob Wang</p>
 <style>
@@ -120,7 +124,8 @@
 <h2>Hello</h2>
 <div>
 <ul>
-<li>Software Developer at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
+<li>Software Developer at
+<img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
 <li><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
 <li>Talk to me about types, FP, libraries and tools :)</li>
 </ul>
@@ -129,16 +134,20 @@
 <section id="its-tuesday-afternoon" class="slide level2">
 <h2>It’s Tuesday afternoon…</h2>
 <ul>
-<li class="fragment">You just finished the beautiful data-processing pipeline using <strong>fs2</strong>, with windowed batched message acknowledgements, exponential backoff on error, etc etc.</li>
+<li class="fragment">You just finished the beautiful data-processing
+pipeline using <strong>fs2</strong>, with windowed batched message
+acknowledgements, exponential backoff on error, etc etc.</li>
 <li class="fragment">But how do you test it?</li>
 </ul>
 </section>
 <section id="the-problem" class="slide level2">
 <h2>The Problem</h2>
-<h3 id="tests-involving-time-and-delays-are-difficult-to-write">Tests involving time and delays are difficult to write</h3>
+<h3 id="tests-involving-time-and-delays-are-difficult-to-write">Tests
+involving time and delays are difficult to write</h3>
 <div>
 <ul>
-<li>Using <code>Thread.sleep</code> (or any kind of real clock) leads to long-running and flaky tests</li>
+<li>Using <code>Thread.sleep</code> (or any kind of real clock) leads to
+long-running and flaky tests</li>
 <li>but what else can we do?</li>
 </ul>
 </div>
@@ -157,21 +166,25 @@
 <h2>Back to the basics</h2>
 <p>In the beginning, there is <code>java.lang.Thread</code></p>
 <ul>
-<li class="fragment"><code>new Thread(r: Runnable)</code> creates a new JVM thread, backed by a native OS thread
+<li class="fragment"><code>new Thread(r: Runnable)</code> creates a new
+JVM thread, backed by a native OS thread
 <ul>
-<li class="fragment"><code>thread.run()</code> executes the Runnable</li>
+<li class="fragment"><code>thread.run()</code> executes the
+Runnable</li>
 </ul></li>
-<li class="fragment"><code>Thread.sleep()</code> suspends the current thread’s execution, and OS schedules other threads to run</li>
+<li class="fragment"><code>Thread.sleep()</code> suspends the current
+thread’s execution, and OS schedules other threads to run</li>
 </ul>
 <div class="fragment">
-<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// java.lang.Runnable</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Runnable <span class="op">{</span></span>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// java.lang.Runnable</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> <span class="ex">Runnable</span> <span class="op">{</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">run</span><span class="op">():</span> <span class="bu">Unit</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> t <span class="op">=</span> <span class="kw">new</span> <span class="fu">Thread</span><span class="op">(</span><span class="kw">new</span> Runnable <span class="op">{</span> </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> t <span class="op">=</span> <span class="kw">new</span> <span class="ex">Thread</span><span class="op">(</span><span class="kw">new</span> <span class="ex">Runnable</span> <span class="op">{</span> </span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">run</span><span class="op">()</span> <span class="op">=</span> <span class="op">{</span> </span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Thread<span class="op">.</span><span class="fu">sleep</span><span class="op">(</span><span class="dv">1000</span><span class="op">)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Thread</span><span class="op">.</span><span class="fu">sleep</span><span class="op">(</span><span class="dv">1000</span><span class="op">)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">println</span><span class="op">(</span><span class="st">&quot;hi!&quot;</span><span class="op">)</span> </span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
@@ -184,49 +197,64 @@
 <li class="fragment">Clunky API</li>
 <li class="fragment">Overhead both in processing time and memory
 <ul>
-<li class="fragment">Memory overhead (each thread has its own stack)</li>
-<li class="fragment">“Context Switching” cost from one thread to another</li>
+<li class="fragment">Memory overhead (each thread has its own
+stack)</li>
+<li class="fragment">“Context Switching” cost from one thread to
+another</li>
 <li class="fragment">In many use cases it limits scalability<br />
-(e.g. Backend services serving a lot of requests all hitting the DB)</li>
+(e.g. Backend services serving a lot of requests all hitting the
+DB)</li>
 </ul></li>
 </ul>
 </section>
 <section id="thread-pools-executorservice" class="slide level2">
 <h2>Thread Pools (ExecutorService)</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> ExecutorService <span class="op">{</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">submit</span><span class="op">(</span>runnable<span class="op">:</span> Runnable<span class="op">):</span> <span class="bu">Unit</span></span>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> <span class="ex">ExecutorService</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">submit</span><span class="op">(</span>runnable<span class="op">:</span> <span class="ex">Runnable</span><span class="op">):</span> <span class="bu">Unit</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <div class="fragment">
-<p>A few <strong>worker threads</strong> take from a queue of <strong>Runnables</strong> and execute them <img style="width: 50%" src="./assets/images/threadpool.svg"></p>
+<p>A few <strong>worker threads</strong> take from a queue of
+<strong>Runnables</strong> and execute them
+<img style="width: 50%" src="./assets/images/threadpool.svg"></p>
 </div>
 <div class="fragment">
-<p><code>ExecutionContext</code> is Scala’s own simpler interface for the same idea</p>
+<p><code>ExecutionContext</code> is Scala’s own simpler interface for
+the same idea</p>
 </div>
 </section>
 <section id="scheduledexecutorservice" class="slide level2">
 <h2>ScheduledExecutorService</h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> ScheduledExecutorService <span class="kw">extends</span> ExecutorService <span class="op">{</span></span>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> <span class="ex">ScheduledExecutorService</span> <span class="kw">extends</span> <span class="ex">ExecutorService</span> <span class="op">{</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Simplified, delay in nanoseconds</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">schedule</span><span class="op">(</span>runnable<span class="op">:</span> Runnable<span class="op">,</span> delay<span class="op">:</span> Long<span class="op">):</span> <span class="bu">Unit</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">schedule</span><span class="op">(</span>runnable<span class="op">:</span> <span class="ex">Runnable</span><span class="op">,</span> delay<span class="op">:</span> <span class="ex">Long</span><span class="op">):</span> <span class="bu">Unit</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
-<li class="fragment">Schedule a <strong>Runnable</strong> to be executed after a delay</li>
-<li class="fragment">Typically backed by a single max-priority thread running (essentially) <code>Thread.sleep</code> continuously
+<li class="fragment">Schedule a <strong>Runnable</strong> to be executed
+after a delay</li>
+<li class="fragment">Typically backed by a single max-priority thread
+running (essentially) <code>Thread.sleep</code> continuously
 <ul>
-<li class="fragment">See <code>java.util.concurrent.ScheduledThreadPoolExecutor</code></li>
+<li class="fragment">See
+<code>java.util.concurrent.ScheduledThreadPoolExecutor</code></li>
 </ul></li>
 </ul>
 </section>
 <section id="one-simple-idea" class="slide level2">
 <h2>One Simple Idea</h2>
-<p>Can we write a <code>ScheduledExecutorService</code> that doesn’t use sleep nor run anything, but instead just record the <strong>Runnables</strong> and when it should be run?</p>
+<p>Can we write a <code>ScheduledExecutorService</code> that doesn’t use
+sleep nor run anything, but instead just record the
+<strong>Runnables</strong> and when it should be run?</p>
 <div class="fragment">
-<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Task</span><span class="op">(</span>runnable<span class="op">:</span> Runnable<span class="op">,</span> runAt<span class="op">:</span> Long<span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ControlledScheduledExecutorService <span class="kw">extends</span> ScheduledExecutorService <span class="op">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> currentTime<span class="op">:</span> Long <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> allTasks<span class="op">:</span> SortedSet<span class="op">[</span>Task<span class="op">]</span> <span class="op">=</span> SortedSet<span class="op">.</span>empty <span class="co">// sorted by runAt</span></span>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Task</span><span class="op">(</span>runnable<span class="op">:</span> <span class="ex">Runnable</span><span class="op">,</span> runAt<span class="op">:</span> <span class="ex">Long</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ControlledScheduledExecutorService <span class="kw">extends</span> <span class="ex">ScheduledExecutorService</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> currentTime<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> allTasks<span class="op">:</span> <span class="ex">SortedSet</span><span class="op">[</span>Task<span class="op">]</span> <span class="op">=</span> <span class="ex">SortedSet</span><span class="op">.</span>empty <span class="co">// sorted by runAt</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">def</span> <span class="fu">schedule</span><span class="op">(</span>runnable<span class="op">:</span> Runnable<span class="op">,</span> delay<span class="op">:</span> Long<span class="op">):</span> <span class="bu">Unit</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">def</span> <span class="fu">schedule</span><span class="op">(</span>runnable<span class="op">:</span> <span class="ex">Runnable</span><span class="op">,</span> delay<span class="op">:</span> <span class="ex">Long</span><span class="op">):</span> <span class="bu">Unit</span> <span class="op">=</span> <span class="op">{</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    allTasks <span class="op">=</span> allTasks <span class="op">:+</span> <span class="fu">Task</span><span class="op">(</span>runnable<span class="op">,</span> currentTime <span class="op">+</span> delay<span class="op">)</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
@@ -234,15 +262,17 @@
 </section>
 <section id="preparing-to-time-warp" class="slide level2">
 <h2>Preparing to time-warp…</h2>
-<p>Since no OS thread nor scheduling are involved, we have total control over what to run and when to run it</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ControlledScheduledExecutorService <span class="kw">extends</span> ScheduledExecutorService <span class="op">{</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> currentTime<span class="op">:</span> Long <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> allTasks<span class="op">:</span> SortedSet<span class="op">[</span>Task<span class="op">]</span> <span class="op">=</span> SortedSet<span class="op">.</span>empty <span class="co">// sorted by runAt</span></span>
+<p>Since no OS thread nor scheduling are involved, we have total control
+over what to run and when to run it</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ControlledScheduledExecutorService <span class="kw">extends</span> <span class="ex">ScheduledExecutorService</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> currentTime<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">var</span> allTasks<span class="op">:</span> <span class="ex">SortedSet</span><span class="op">[</span>Task<span class="op">]</span> <span class="op">=</span> <span class="ex">SortedSet</span><span class="op">.</span>empty <span class="co">// sorted by runAt</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">def</span> <span class="fu">schedule</span><span class="op">(</span>runnable<span class="op">:</span> Runnable<span class="op">,</span> delay<span class="op">:</span> Long<span class="op">):</span> <span class="bu">Unit</span> <span class="op">=</span> <span class="co">// ...</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">def</span> <span class="fu">schedule</span><span class="op">(</span>runnable<span class="op">:</span> <span class="ex">Runnable</span><span class="op">,</span> delay<span class="op">:</span> <span class="ex">Long</span><span class="op">):</span> <span class="bu">Unit</span> <span class="op">=</span> <span class="co">// ...</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Move clock forward and run any Runnables that should happen during this period</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">tick</span><span class="op">(</span>elapseTime<span class="op">:</span> Long<span class="op">)</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">tick</span><span class="op">(</span>elapseTime<span class="op">:</span> <span class="ex">Long</span><span class="op">)</span> <span class="op">=</span> <span class="op">{</span></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    currentTime <span class="op">=</span> currentTime <span class="op">+</span> elapseTime</span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> nextTask <span class="op">=</span> allTasks<span class="op">.</span><span class="fu">findAndRemove</span><span class="op">(</span>_<span class="op">.</span>runAt <span class="op">&lt;=</span> currentTime<span class="op">)</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>nextTask<span class="op">.</span>nonEmpty<span class="op">)</span> <span class="op">{</span></span>
@@ -254,10 +284,11 @@
 </section>
 <section id="its-warp-time" class="slide level2">
 <h2>It’s warp time!</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> ctx <span class="op">=</span> <span class="kw">new</span> ControlledScheduledExecutorService</span>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> ctx <span class="op">=</span> <span class="kw">new</span> ControlledScheduledExecutorService</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ctx<span class="op">.</span><span class="fu">schedule</span><span class="op">(</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> Runnable  <span class="op">{</span> <span class="kw">def</span> <span class="fu">run</span><span class="op">()</span> <span class="op">=</span> <span class="fu">println</span><span class="op">(</span><span class="st">&quot;Warped!&quot;</span><span class="op">)</span> <span class="op">},</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="ex">Runnable</span>  <span class="op">{</span> <span class="kw">def</span> <span class="fu">run</span><span class="op">()</span> <span class="op">=</span> <span class="fu">println</span><span class="op">(</span><span class="st">&quot;Warped!&quot;</span><span class="op">)</span> <span class="op">},</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1000</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> </span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
@@ -266,7 +297,10 @@
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>ctx<span class="op">.</span><span class="fu">tick</span><span class="op">(</span><span class="dv">300</span><span class="op">)</span></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>ctx<span class="op">.</span><span class="fu">tick</span><span class="op">(</span><span class="dv">500</span><span class="op">)</span> <span class="co">// &quot;Warped!&quot;</span></span></code></pre></div>
 <ul>
-<li class="fragment">Evaluation depends on “what task is in the queue, and when should they be run”, which means there’s no difference between running 100 <strong>Runnable</strong> scheduled all within 1 millis or 1000 years!</li>
+<li class="fragment">Evaluation depends on “what task is in the queue,
+and when should they be run”, which means there’s no difference between
+running 100 <strong>Runnable</strong> scheduled all within 1 millis or
+1000 years!</li>
 </ul>
 <div class="fragment">
 <h3 color="red" style="margin-top: 50px;">
@@ -276,21 +310,23 @@
 </section>
 <section id="its-runnables-all-the-way-down" class="slide level2">
 <h2>It’s Runnables all the way down</h2>
-<p>Almost all effect libraries / Futures ultimately ends up as <strong>Runnables</strong> being submitted to thread pools.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">implicit</span> <span class="kw">val</span> ec<span class="op">:</span> ExecutionContext <span class="op">=</span> <span class="op">...</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>Future <span class="op">{</span> </span>
+<p>Almost all effect libraries / Futures ultimately ends up as
+<strong>Runnables</strong> being submitted to thread pools.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">implicit</span> <span class="kw">val</span> ec<span class="op">:</span> ExecutionContext <span class="op">=</span> <span class="op">...</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Future</span> <span class="op">{</span> </span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span> <span class="op">+</span> <span class="dv">1</span>                       <span class="co">// 1</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">}.</span>map <span class="op">{</span> res <span class="op">=&gt;</span> </span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">println</span><span class="op">(</span>res<span class="op">)</span>                <span class="co">// 2</span></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Eventually translates to something like...</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>ec<span class="op">.</span><span class="fu">execute</span><span class="op">(</span><span class="kw">new</span> Runnable <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>ec<span class="op">.</span><span class="fu">execute</span><span class="op">(</span><span class="kw">new</span> <span class="ex">Runnable</span> <span class="op">{</span></span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">run</span><span class="op">()</span> <span class="op">=</span> <span class="op">{</span></span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> res <span class="op">=</span> <span class="dv">1</span> <span class="op">+</span> <span class="dv">1</span>           <span class="co">// 1</span></span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    ec<span class="op">.</span><span class="fu">execute</span><span class="op">(</span><span class="kw">new</span> Runnable <span class="op">{</span> <span class="co">// submit the &quot;next step&quot; back to the EC</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    ec<span class="op">.</span><span class="fu">execute</span><span class="op">(</span><span class="kw">new</span> <span class="ex">Runnable</span> <span class="op">{</span> <span class="co">// submit the &quot;next step&quot; back to the EC</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">def</span> <span class="fu">run</span><span class="op">()</span> <span class="op">=</span> <span class="op">{</span></span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">println</span><span class="op">(</span>res<span class="op">)</span>          <span class="co">// 2</span></span>
@@ -302,14 +338,17 @@
 </section>
 <section id="cats.effect-testcontext" class="slide level2">
 <h2>cats.effect TestContext</h2>
-<p><code>TestContext</code> is one implementation of controlled thread pool / scheduler</p>
+<p><code>TestContext</code> is one implementation of controlled thread
+pool / scheduler</p>
 <ul>
-<li class="fragment">You can find it in <code>cats-effect-laws</code> library dependency</li>
+<li class="fragment">You can find it in <code>cats-effect-laws</code>
+library dependency</li>
 </ul>
 <div class="fragment">
-<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> testCtx <span class="op">=</span> cats<span class="op">.</span>effect<span class="op">.</span>laws<span class="op">.</span>util<span class="op">.</span><span class="fu">TestContext</span><span class="op">()</span> <span class="co">// TestContext &lt;: ExecutionContext</span></span>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> testCtx <span class="op">=</span> cats<span class="op">.</span>effect<span class="op">.</span>laws<span class="op">.</span>util<span class="op">.</span><span class="fu">TestContext</span><span class="op">()</span> <span class="co">// TestContext &lt;: ExecutionContext</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">implicit</span> <span class="kw">val</span> ctxShift<span class="op">:</span> ContextShift<span class="op">[</span>IO<span class="op">]</span> <span class="op">=</span> testCtx<span class="op">.</span>ioContextShift</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">implicit</span> <span class="kw">val</span> timer<span class="op">:</span> Timer<span class="op">[</span>IO<span class="op">]</span> <span class="op">=</span> testCtx<span class="op">.</span>ioTimer</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">implicit</span> <span class="kw">val</span> timer<span class="op">:</span> <span class="ex">Timer</span><span class="op">[</span>IO<span class="op">]</span> <span class="op">=</span> testCtx<span class="op">.</span>ioTimer</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> appLogic <span class="op">=</span> <span class="cf">for</span> <span class="op">{</span>                                           <span class="co">// Step 1 Define the IO</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> IO <span class="op">{</span> <span class="fu">println</span><span class="op">(</span><span class="st">&quot;hi!&quot;</span><span class="op">)</span> <span class="op">}</span></span>
@@ -331,8 +370,10 @@
 <h2>Structuring your test</h2>
 <p>How to structure our time-sensitive tests?</p>
 <ul>
-<li class="fragment">We create two IOs: “app logic” and “assertions” (observer)</li>
-<li class="fragment">Run these two IOs in “parallel” using the TestContext</li>
+<li class="fragment">We create two IOs: “app logic” and “assertions”
+(observer)</li>
+<li class="fragment">Run these two IOs in “parallel” using the
+TestContext</li>
 </ul>
 <div class="fragment">
 <p><img style="width: 60%" src="./assets/images/assertion_timings.svg"></p>
@@ -340,7 +381,8 @@
 </section>
 <section class="slide level2">
 
-<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> testContext <span class="op">=</span> <span class="fu">TestContext</span><span class="op">()</span></span>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> testContext <span class="op">=</span> <span class="fu">TestContext</span><span class="op">()</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">implicit</span> <span class="kw">val</span> contextShift<span class="op">:</span> ContextShift<span class="op">[</span>IO<span class="op">]</span> <span class="op">=</span> testContext<span class="op">.</span>ioContextShift</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">implicit</span> <span class="kw">val</span> timer <span class="op">=</span> testContext<span class="op">.</span>ioTimer</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -361,7 +403,7 @@
 <span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">yield</span> succeed</span>
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Step 3: &quot;Execute&quot; the test</span></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> f<span class="op">:</span> Future<span class="op">[</span>Assertion<span class="op">]</span> <span class="op">=</span> cotextShift<span class="op">.</span><span class="fu">evalOn</span><span class="op">(</span>testContext<span class="op">)(</span>test<span class="op">).</span><span class="fu">unsafeToFuture</span><span class="op">()</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> f<span class="op">:</span> <span class="ex">Future</span><span class="op">[</span>Assertion<span class="op">]</span> <span class="op">=</span> cotextShift<span class="op">.</span><span class="fu">evalOn</span><span class="op">(</span>testContext<span class="op">)(</span>test<span class="op">).</span><span class="fu">unsafeToFuture</span><span class="op">()</span></span>
 <span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="co">// Actually execute all the app logic and assertions</span></span>
 <span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Note that assertions will terminate the appLogic when it is done</span></span>
@@ -371,27 +413,36 @@
 <section id="final-tips" class="slide level2">
 <h2>Final Tips</h2>
 <ul>
-<li class="fragment">Given two <strong>Runnables</strong> that should be run at the same time, TestContext randomize the order
+<li class="fragment">Given two <strong>Runnables</strong> that should be
+run at the same time, TestContext randomize the order
 <ul>
 <li class="fragment">Good for catching race conditions</li>
 </ul></li>
-<li class="fragment">Since only TestContext is controlled, <strong>ALL</strong> your Runnables need to be submitted to it
+<li class="fragment">Since only TestContext is controlled,
+<strong>ALL</strong> your Runnables need to be submitted to it
 <ul>
-<li class="fragment">Doobie Transactor, any <code>Future{..}/future.map</code>, etc etc</li>
-<li class="fragment">External libraries should allow you to specify a thread pool</li>
+<li class="fragment">Doobie Transactor, any
+<code>Future{..}/future.map</code>, etc etc</li>
+<li class="fragment">External libraries should allow you to specify a
+thread pool</li>
 </ul></li>
-<li class="fragment">The underlying mechanism is based on simple primitives , you can time-warp with Scala Future, Monix, ZIO, and Java <code>CompletableFuture</code> too ;)</li>
+<li class="fragment">The underlying mechanism is based on simple
+primitives , you can time-warp with Scala Future, Monix, ZIO, and Java
+<code>CompletableFuture</code> too ;)</li>
 </ul>
 </section>
 <section id="acknowledgements" class="slide level2">
 <h2>Acknowledgements</h2>
 <div>
 <ul>
-<li>People on cats-effect gitter chat who helped me setup TestContext tests
+<li>People on cats-effect gitter chat who helped me setup TestContext
+tests
 <ul>
-<li>Daniel Spiewak (<span class="citation" data-cites="djspiewak">@djspiewak</span>)</li>
+<li>Daniel Spiewak (<span class="citation"
+data-cites="djspiewak">@djspiewak</span>)</li>
 <li>Fabio Labella (aka SystemFw)</li>
-<li>Gavin Bisesi (<span class="citation" data-cites="Daenyth">@Daenyth</span>)</li>
+<li>Gavin Bisesi (<span class="citation"
+data-cites="Daenyth">@Daenyth</span>)</li>
 </ul></li>
 </ul>
 </div>
@@ -404,7 +455,7 @@
 
   <script src="./revealjs/dist/reveal.js"></script>
 
-  // reveal.js plugins
+  <!-- reveal.js plugins -->
   <script src="./revealjs/plugin/notes/notes.js"></script>
   <script src="./revealjs/plugin/search/search.js"></script>
   <script src="./revealjs/plugin/zoom/zoom.js"></script>
@@ -415,12 +466,146 @@
       // Full list of configuration options available at:
       // https://revealjs.com/config/
       Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
         // Push each slide change to the browser history
-        history: true,
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
         // Vertical centering of slides
         center: false,
-        // Transition style
-        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
         math: {
           mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js',
           config: 'TeX-AMS_HTML-full',

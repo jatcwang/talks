@@ -157,7 +157,7 @@
 <li>Software Developer
 at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
 <li><span class="citation" data-cites="jatcwang">@jatcwang</span></li>
-<li>Talk to me about types, FP, libraries and tools :)</li>
+<li>I like types, libraries and tools :)</li>
 </ul>
 </div>
 </section>
@@ -208,7 +208,7 @@ Scala 2.13 &amp; 3
 </ul>
 </li>
 <li class="fragment">
-Create <strong>Differ</strong>s (derive + configure)
+Create <code>Differ</code>s (derive + configure)
 <ul>
 <li class="fragment">
 Differ.apply (e.g. <code>Differ[List[Int]]</code>) to “summon” an instance
@@ -216,7 +216,7 @@ Differ.apply (e.g. <code>Differ[List[Int]]</code>) to “summon” an instance
 </ul>
 </li>
 <li class="fragment">
-Use <strong>Differ</strong>s to diff values
+Use <code>Differ</code>s to diff values
 </li>
 </ul>
 </section>
@@ -227,10 +227,10 @@ Use <strong>Differ</strong>s to diff values
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> difflicious<span class="op">.</span>implicits<span class="op">.*</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> difflicious<span class="op">.</span>munit<span class="op">.</span>MUnitDiff<span class="op">.*</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Foo</span><span class="op">(</span>i<span class="op">:</span> <span class="bu">Int</span><span class="op">,</span> s<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="kw">class</span> <span class="fu">Foo</span><span class="op">(</span>i<span class="op">:</span> <span class="bu">Int</span><span class="op">,</span> s<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Create the differ</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> differ<span class="op">:</span> Differ<span class="op">[</span>Foo<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>given differ<span class="op">:</span> Differ<span class="op">[</span>Foo<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> expected <span class="op">=</span> <span class="fu">Foo</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">)</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> actual <span class="op">=</span> <span class="fu">Foo</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="st">&quot;b&quot;</span><span class="op">)</span></span>
@@ -306,9 +306,9 @@ Vector(
 </div>
 <div class="fragment">
 <div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> expectedCats <span class="op">=</span> <span class="ex">List</span><span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Cat</span><span class="op">(</span><span class="st">&quot;Bono&quot;</span><span class="op">,</span> <span class="dv">8</span><span class="op">),</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Cat</span><span class="op">(</span><span class="st">&quot;Lucy&quot;</span><span class="op">,</span> <span class="dv">14</span><span class="op">),</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Sven?</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Cat</span><span class="op">(</span><span class="st">&quot;Lucy&quot;</span><span class="op">,</span> <span class="dv">14</span><span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Cat</span><span class="op">(</span><span class="st">&quot;Bono&quot;</span><span class="op">,</span> <span class="dv">8</span><span class="op">)</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> actualCats <span class="op">=</span> <span class="ex">List</span><span class="op">(</span></span>
@@ -322,12 +322,12 @@ Vector(
 <pre class="diff-render fragment">
 List(
   Cat(
-    name: "Bono",
-    age: <span class="red">7</span> -> <span class="green">8</span>
+    name: <span class="red">"Bono"</span> -> <span class="green">"Lucy"</span>,
+    age: <span class="red">7</span> -> <span class="green">14</span>,
   ),
   Cat(
-    name: <span class="red">"Sven"</span> -> <span class="green">"Lucy"</span>,
-    age: <span class="red">3</span> -> <span class="green">14</span>
+    name: <span class="red">"Sven"</span> -> <span class="green">"Bono"</span>,
+    age: <span class="red">3</span> -> <span class="green">8</span>,
   ),
 )
 </pre>
@@ -372,14 +372,15 @@ List(
 <li class="fragment">e.g. Externally generated IDs, out-of-context data for current test</li>
 </ul>
 <div class="fragment">
-<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Register dogs, returning dogs with their ID </span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">registerDogs</span><span class="op">(</span>dogData<span class="op">:</span> <span class="ex">List</span><span class="op">[</span>DogData<span class="op">]):</span> <span class="ex">List</span><span class="op">[</span>Dog<span class="op">]</span> <span class="op">=</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> dogIds <span class="op">=</span> <span class="fu">writeToDatabaseReturningIds</span><span class="op">(</span>dogData<span class="op">)</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fetchDogsById</span><span class="op">(</span>dogIds<span class="op">)</span> <span class="co">// We cannot predict the IDs generated!</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="cf">case</span> <span class="kw">class</span> <span class="fu">DogData</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">final</span> <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Dog</span><span class="op">(</span>id<span class="op">:</span> <span class="bu">Int</span><span class="op">,</span> name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example business logic:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Register dogs, returning dogs with their ID </span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">registerDogs</span><span class="op">(</span>dogData<span class="op">:</span> <span class="ex">List</span><span class="op">[</span>DogData<span class="op">]):</span> <span class="ex">List</span><span class="op">[</span>Dog<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> dogIds <span class="op">=</span> <span class="fu">writeToDatabaseReturningIds</span><span class="op">(</span>dogData<span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fetchDogsById</span><span class="op">(</span>dogIds<span class="op">)</span> <span class="co">// We cannot predict the IDs generated!</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="kw">class</span> <span class="fu">DogData</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="kw">class</span> <span class="fu">Dog</span><span class="op">(</span>id<span class="op">:</span> <span class="bu">Int</span><span class="op">,</span> name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span></code></pre></div>
 </div>
 </section>
 <section id="ignoring-fields-2" class="slide level2">
@@ -413,13 +414,29 @@ List(
 <section id="deep-configuration" class="slide level2">
 <h2>Deep configuration!</h2>
 <ul>
-<li class="fragment"><strong>.ignoreAt</strong> (and friends) takes a “path expression”
+<li class="fragment"><code>.ignoreAt(_.each.id)</code>
 <ul>
-<li class="fragment"><strong>_.each.id</strong> from the previous example</li>
+<li class="fragment"><code>_.each.id</code> is the “path expression”</li>
 </ul></li>
-<li class="fragment">Deep configuration allow us to quickly tweak our Differ for our current test</li>
+<li class="fragment">Allow us to easily tweak behaviour for the current test</li>
 </ul>
-<div class="fragment" style="font-size: 1.3rem; margin: 10px 5%">
+<div class="fragment">
+<p>There are other useful configuration methods like <code>.configure</code> and <code>.replace</code></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>given Differ<span class="op">[</span>Employee<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>given Differ<span class="op">[</span>DogZoo<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> newDogsDiffer<span class="op">:</span> Differ<span class="op">[</span><span class="ex">List</span><span class="op">[</span>Dog<span class="op">]]</span> <span class="op">=</span> <span class="co">// a heavily configured Differ[List[Dog]]</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> configuredDogZooDiffer <span class="op">=</span> Differ<span class="op">[</span>DogZoo<span class="op">]</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// .configure allows you to &quot;focus&quot; on a differ inside to make multiple tweaks to it</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">configure</span><span class="op">(</span>_<span class="op">.</span>employees<span class="op">)(</span>_<span class="op">.</span><span class="fu">ignoreAt</span><span class="op">(</span>_<span class="op">.</span>each<span class="op">.</span>age<span class="op">).</span><span class="fu">ignoreAt</span><span class="op">(</span>_<span class="op">.</span>each<span class="op">.</span>hoursWorked<span class="op">).</span><span class="fu">pairBy</span><span class="op">(</span>_<span class="op">.</span>name<span class="op">))</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// .replace will replace the Differ at the given path</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">replace</span><span class="op">(</span>_<span class="op">.</span>dogs<span class="op">)(</span>newDogsDiffer<span class="op">)</span></span></code></pre></div>
+</div>
+</section>
+<section id="path-expressions" class="slide level2">
+<h2>Path Expressions</h2>
+<div style="font-size: 1.3rem; margin: 10px 5%">
 <table>
 <colgroup>
 <col style="width: 33%" />
@@ -452,7 +469,7 @@ List(
 <tr class="even">
 <td>Case Class</td>
 <td>(any case class field)</td>
-<td>Traverse down to the Differ for the specified sub type</td>
+<td>Traverse down to the Differ of the field</td>
 </tr>
 <tr class="odd">
 <td>Sealed Trait / Enum</td>
@@ -465,27 +482,31 @@ List(
 </section>
 <section id="putting-it-all-together" class="slide level2">
 <h2>Putting it all together</h2>
-<div class="sourceCode" id="cb9"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> Person<span class="op">:</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> name<span class="op">:</span> <span class="ex">String</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> Person<span class="op">:</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Employee</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> attire<span class="op">:</span> <span class="ex">String</span><span class="op">)</span> <span class="kw">extends</span> Person</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Contractor</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span> <span class="kw">extends</span> Person</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="kw">class</span> <span class="fu">OfficeCapacity</span><span class="op">(</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  home<span class="op">:</span> <span class="ex">List</span><span class="op">[</span>Person<span class="op">],</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  office<span class="op">:</span> <span class="ex">List</span><span class="op">[</span>Person<span class="op">]</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Derive default differs</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>given Differ<span class="op">[</span>Person<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>given Differ<span class="op">[</span>OfficeCapacity<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> officeCapacityDiffer <span class="op">=</span> Differ<span class="op">[</span>OfficeCapacity<span class="op">]</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">ignoreAt</span><span class="op">(</span>_<span class="op">.</span>home<span class="op">.</span>each<span class="op">.</span>subType<span class="op">[</span>Employee<span class="op">].</span>attire<span class="op">)</span> <span class="co">// Pants optional!</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">configure</span><span class="op">(</span>_<span class="op">.</span>home<span class="op">)(</span>d <span class="op">=&gt;</span> d<span class="op">.</span><span class="fu">pairBy</span><span class="op">(</span>_<span class="op">.</span>name<span class="op">))</span></span></code></pre></div>
+<p>Let’s track office capacity and that everyone is dressed correctly :)</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sealed</span> <span class="kw">trait</span> Person<span class="op">:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> name<span class="op">:</span> <span class="ex">String</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> Person<span class="op">:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Contractor</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span> <span class="kw">extends</span> Person</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="kw">class</span> <span class="fu">Employee</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> attire<span class="op">:</span> <span class="ex">String</span><span class="op">)</span> <span class="kw">extends</span> Person</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="kw">class</span> <span class="fu">OfficeCapacity</span><span class="op">(</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  home<span class="op">:</span> <span class="ex">Set</span><span class="op">[</span>Person<span class="op">],</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  office<span class="op">:</span> <span class="ex">Map</span><span class="op">[</span><span class="bu">Int</span><span class="op">,</span> Person<span class="op">]</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Derive default differs</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>given Differ<span class="op">[</span>Person<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>given Differ<span class="op">[</span>OfficeCapacity<span class="op">]</span> <span class="op">=</span> Differ<span class="op">.</span>derived</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> officeCapacityDiffer <span class="op">=</span> Differ<span class="op">[</span>OfficeCapacity<span class="op">]</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Pants optional when WFH ;)</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">ignoreAt</span><span class="op">(</span>_<span class="op">.</span>home<span class="op">.</span>each<span class="op">.</span>subType<span class="op">[</span>Employee<span class="op">].</span>attire<span class="op">)</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Pair people by name when comparing</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">configure</span><span class="op">(</span>_<span class="op">.</span>home<span class="op">)(</span>_<span class="op">.</span><span class="fu">pairBy</span><span class="op">(</span>_<span class="op">.</span>name<span class="op">))</span>  </span></code></pre></div>
 </section>
 <section class="slide level2">
 
+<p>What a diff output might look like:</p>
 <pre class="diff-render">
 OfficeCapacity(
   home: Set(
@@ -512,18 +533,21 @@ OfficeCapacity(
   ),
 )</pre>
 </section>
-<section id="final-notes" class="slide level2">
-<h2>Final notes</h2>
-<div class="fragment">
-<div>
+<section id="final-tips" class="slide level2">
+<h2>Final tips</h2>
+<ul style="line-height: 1.4">
+<li class="fragment">
+Use <code>Differ.useEquals</code> if just want to compare a type by <code>==</code>
+</li>
+<li class="fragment">
+<strong>IntelliJ</strong>: need to adjust some settings to not make all test failure color red
 <ul>
-<li>For <strong>IntelliJ</strong>, you’d need to adjust some settings to not make all test failure color red
-<ul>
-<li>Editor | Color Scheme | Console Colors | Console | Error Output, uncheck the red foreground color</li>
-</ul></li>
+<li>
+Editor | Color Scheme | Console Colors | Console | Error Output, uncheck the red foreground color
+</li>
 </ul>
-</div>
-</div>
+</li>
+</ul>
 </section>
 <section id="thank-you" class="slide level2">
 <h2>Thank you!</h2>
@@ -533,8 +557,9 @@ OfficeCapacity(
 <ul>
 <li>Many inspirations from <strong>diffx</strong></li>
 </ul></li>
-<li>EPFL &amp; anyone who contributed to Scala 3
+<li>EPFL &amp; all other Scala 3 contributors
 <ul>
+<li><em>Givens</em> save keystrokes</li>
 <li>Macros are tremendous fun</li>
 </ul></li>
 </ul>

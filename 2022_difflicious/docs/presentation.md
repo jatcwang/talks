@@ -65,7 +65,7 @@ Jacob Wang
 - Software Developer
   at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/>
 - @jatcwang
-- Talk to me about types, FP, libraries and tools :)
+- I like types, libraries and tools :)
 
 :::
 
@@ -108,12 +108,12 @@ A career in goat farming looks great all of a sudden...
       <li>Scala 2.13 & 3</li>
     </ul>
   </li>
-  <li class="fragment"> Create **Differ**s (derive + configure)
+  <li class="fragment"> Create `Differ`s (derive + configure)
   <ul>
     <li class="fragment">Differ.apply (e.g. `Differ[List[Int]]`) to "summon" an instance</li>
   </ul>
   </li>
-  <li class="fragment">Use **Differ**s to diff values</li>
+  <li class="fragment">Use `Differ`s to diff values</li>
 </ul>
 
 # A Simple Example
@@ -129,10 +129,10 @@ import difflicious.Differ
 import difflicious.implicits.*
 import difflicious.munit.MUnitDiff.*
 
-final case class Foo(i: Int, s: String)
+case class Foo(i: Int, s: String)
 
 // Create the differ
-val differ: Differ[Foo] = Differ.derived
+given differ: Differ[Foo] = Differ.derived
 
 val expected = Foo(1, "a")
 val actual = Foo(1, "b")
@@ -218,7 +218,7 @@ From the diff we see that:
 :::
 
 ```scala mdoc:invisible
-final case class Cat(name: String, age: Int)
+case class Cat(name: String, age: Int)
 
 object Cat: 
   given Differ[Cat] = Differ.derived
@@ -227,9 +227,9 @@ object Cat:
 <div class="fragment">
 ```scala
 val expectedCats = List(
-  Cat("Bono", 8),
+  Cat("Lucy", 14),
   // Sven?
-  Cat("Lucy", 14)
+  Cat("Bono", 8)
 )
 
 val actualCats = List(
@@ -242,7 +242,7 @@ Differ[List[Cat]].assertNoDiff(actualCats, expectedCats)
 ```
 </div>
 
-[//]: # (```scala mdoc:invisible)
+[//]: # (```scala mdoc)
 
 [//]: # (printHtml&#40;Differ[List[Cat]].diff&#40;actualCats, expectedCats&#41;&#41;)
 
@@ -251,12 +251,12 @@ Differ[List[Cat]].assertNoDiff(actualCats, expectedCats)
 <pre class="diff-render fragment">
 List(
   Cat(
-    name: "Bono",
-    age: <span class="red">7</span> -> <span class="green">8</span>
+    name: <span class="red">"Bono"</span> -> <span class="green">"Lucy"</span>,
+    age: <span class="red">7</span> -> <span class="green">14</span>,
   ),
   Cat(
-    name: <span class="red">"Sven"</span> -> <span class="green">"Lucy"</span>,
-    age: <span class="red">3</span> -> <span class="green">14</span>
+    name: <span class="red">"Sven"</span> -> <span class="green">"Bono"</span>,
+    age: <span class="red">3</span> -> <span class="green">8</span>,
   ),
 )
 </pre>
@@ -313,6 +313,7 @@ List(
 <div class="fragment">
 
 ```scala
+// Example business logic:
 // Register dogs, returning dogs with their ID 
 def registerDogs(dogData: List[DogData]): List[Dog] =
   
@@ -322,8 +323,8 @@ def registerDogs(dogData: List[DogData]): List[Dog] =
 ```
 
 ```scala mdoc:silent
-final case class DogData(name: String)
-final case class Dog(id: Int, name: String)
+case class DogData(name: String)
+case class Dog(id: Int, name: String)
 ```
 
 ```scala mdoc:invisible
@@ -376,33 +377,54 @@ List(
 
 ## Deep configuration!
 
-* **.ignoreAt** (and friends) takes a "path expression"
-    * **\_.each.id** from the previous example
-* Deep configuration allow us to quickly tweak our Differ for our current test
+* `.ignoreAt(_.each.id)`
+  * `_.each.id` is the "path expression"
+* Allow us to easily tweak behaviour for the current test
 
-<div class="fragment" style="font-size: 1.3rem; margin: 10px 5%">
+<div class="fragment">
+There are other useful configuration methods like `.configure` and `.replace`
+
+```scala
+given Differ[Employee] = Differ.derived
+given Differ[DogZoo] = Differ.derived
+
+val newDogsDiffer: Differ[List[Dog]] = // a heavily configured Differ[List[Dog]]
+
+val configuredDogZooDiffer = Differ[DogZoo]
+  // .configure allows you to "focus" on a differ inside to make multiple tweaks to it
+  .configure(_.employees)(_.ignoreAt(_.each.age).ignoreAt(_.each.hoursWorked).pairBy(_.name))
+  // .replace will replace the Differ at the given path
+  .replace(_.dogs)(newDogsDiffer)
+```
+</div>
+
+## Path Expressions
+
+<div class="" style="font-size: 1.3rem; margin: 10px 5%">
 | Differ Type  | Allowed Paths          | Explanation                                                       |
 | --           | --                     | --                                                                |
 | Seq          | .each                  | Traverse down to the Differ used to compare the elements          |
 | Set          | .each                  | Traverse down to the Differ used to compare the elements          |
 | Map          | .each                  | Traverse down to the Differ used to compare the values of the Map |
-| Case Class   | (any case class field) | Traverse down to the Differ for the specified sub type            |
+| Case Class   | (any case class field) | Traverse down to the Differ of the field            |
 | Sealed Trait / Enum | .subType[SomeSubType]  | Traverse down to the Differ for the specified sub type            |
 </div>
 
 ## Putting it all together
+
+Let's track office capacity and that everyone is dressed correctly :)
 
 ```scala mdoc:silent
 sealed trait Person:
   def name: String
   
 object Person:
-  case class Employee(name: String, attire: String) extends Person
   case class Contractor(name: String) extends Person
+  case class Employee(name: String, attire: String) extends Person
 
 case class OfficeCapacity(
-  home: List[Person],
-  office: List[Person]
+  home: Set[Person],
+  office: Map[Int, Person]
 )
 ```
 
@@ -412,11 +434,15 @@ given Differ[Person] = Differ.derived
 given Differ[OfficeCapacity] = Differ.derived
 
 val officeCapacityDiffer = Differ[OfficeCapacity]
-  .ignoreAt(_.home.each.subType[Employee].attire) // Pants optional!
-  .configure(_.home)(d => d.pairBy(_.name))
+  // Pants optional when WFH ;)
+  .ignoreAt(_.home.each.subType[Employee].attire)
+  // Pair people by name when comparing
+  .configure(_.home)(_.pairBy(_.name))  
 ```
 
 ---
+
+What a diff output might look like:
 
 <pre class="diff-render">
 OfficeCapacity(
@@ -444,18 +470,16 @@ OfficeCapacity(
   ),
 )</pre>
 
-## Final notes
+## Final tips
 
-<div class="fragment">
-
-:::nonincremental
-
-- For **IntelliJ**, you'd need to adjust some settings to not make all test failure color red
-    - Editor | Color Scheme | Console Colors | Console | Error Output, uncheck the red foreground color
-
-:::
-
-</div>
+<ul style="line-height: 1.4">
+  <li class="fragment">Use `Differ.useEquals` if just want to compare a type by `==`</li>
+  <li class="fragment">**IntelliJ**: need to adjust some settings to not make all test failure color red
+    <ul>
+      <li>Editor | Color Scheme | Console Colors | Console | Error Output, uncheck the red foreground color</li>
+    </ul>
+  </li>
+</ul>
 
 ## Thank you!
 
@@ -463,7 +487,8 @@ OfficeCapacity(
 
 - SoftwareMill
     - Many inspirations from **diffx**
-- EPFL & anyone who contributed to Scala 3
+- EPFL & all other Scala 3 contributors
+    - *Givens* save keystrokes
     - Macros are tremendous fun
 
 :::
