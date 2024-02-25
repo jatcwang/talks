@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>presentation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="./revealjs/dist/reset.css">
+  <link rel="stylesheet" href="./revealjs/dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="./revealjs/dist/theme/white.css" id="theme">
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section class="slide level2">
+
+<p style="font-size: 4rem; margin: 0">
+<span style="">Who told you that?!</span>
+</p>
+<p style="margin: 0">
+<span style="font-size: 2rem; color: #504f4f">Deep dive into Context Propagation</span>
+</p>
+<div style="font-size: 2rem;">
+<p>Jacob Wang</p>
+</div>
+<p><span style="font-size: 1.5rem">London Scala User Group, 2024 March</span></p>
+<style>
+  .no-box img {
+    box-shadow: none!important;
+  }
+  
+  .slides {
+    margin-top: 30px!important;
+  }
+  
+  .reveal .slides h3 {
+    margin-top: -20px;
+    color: brown;
+    text-transform: inherit;
+  }
+
+  .reveal h1 {
+    text-transform: none;
+  }
+
+  .reveal h2 {
+    text-transform: none;
+  }
+
+  .reveal pre code {
+    max-height: 800px;
+    font-size: 16px;
+  }
+
+  .reveal code {
+  }
+
+  .diff-render {
+      background: aliceblue;
+      border-radius: 5px;
+      padding: 15px!important;
+      white-space: pre;
+  }
+
+  .diff-render .red {
+     color: red;
+  }
+
+  .diff-render .green {
+     color: green;
+  }
+
+  .diff-render .gray {
+     color: gray;
+  }
+</style>
+</section>
+<section id="hello" class="slide level2">
+<h2>Hello</h2>
+<div>
+<ul>
+<li>Software Developer
+at <img style="box-shadow: none; margin: 0 0 3px 5px; vertical-align: sub;" src="./assets/images/medidata.png"/></li>
+<li>https://mas.to/<span class="citation" data-cites="jatcwang">@jatcwang</span></li>
+</ul>
+</div>
+</section>
+<section id="passing-context" class="slide level2">
+<h2>Passing Context</h2>
+<ul>
+<li class="fragment">What do we mean by Context?</li>
+</ul>
+<p><img class="fragment no-box" width="500px" src="assets/images/microservices.svg" /></p>
+<ul>
+<li class="fragment">E.g. Tenant ID, User ID, or anything else relevant for the current request</li>
+<li class="fragment">May not be necessary to fulfill the request, but useful for debugging when things aren’t quite working!</li>
+</ul>
+</section>
+<section>
+<section id="java.lang.threadlocal" class="title-slide slide level1">
+<h1>java.lang.ThreadLocal</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> Example<span class="op">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> MY_TL <span class="op">=</span> <span class="ex">ThreadLocal</span><span class="op">.</span><span class="fu">withInitial</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="dv">1</span><span class="op">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">printTL</span><span class="op">()</span> <span class="op">=</span> <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;${</span><span class="ex">Thread</span><span class="op">.</span><span class="fu">currentThread</span><span class="op">().</span><span class="fu">getName</span><span class="op">()</span><span class="ss">}</span><span class="st">: </span><span class="ss">${</span>MY_TL<span class="op">.</span><span class="fu">get</span><span class="op">()</span><span class="ss">}&quot;</span><span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">set2</span><span class="op">():</span> <span class="bu">Unit</span> <span class="op">=</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">printTL</span><span class="op">()</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    MY_TL<span class="op">.</span><span class="fu">set</span><span class="op">(</span><span class="dv">2</span><span class="op">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">set3</span><span class="op">():</span> <span class="bu">Unit</span> <span class="op">=</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">printTL</span><span class="op">()</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    MY_TL<span class="op">.</span><span class="fu">set</span><span class="op">(</span><span class="dv">3</span><span class="op">)</span></span></code></pre></div>
+</section>
+<section class="slide level2">
+
+<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Let&#39;s run it</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> t1 <span class="op">=</span> <span class="kw">new</span> <span class="ex">Thread</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  Example<span class="op">.</span><span class="fu">set2</span><span class="op">()</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  Example<span class="op">.</span><span class="fu">set3</span><span class="op">()</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  Example<span class="op">.</span><span class="fu">printTL</span><span class="op">()</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">},</span> <span class="st">&quot;t1&quot;</span><span class="op">).</span><span class="fu">start</span><span class="op">()</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> t2 <span class="op">=</span> <span class="kw">new</span> <span class="ex">Thread</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  Example<span class="op">.</span><span class="fu">set2</span><span class="op">()</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  Example<span class="op">.</span><span class="fu">set3</span><span class="op">()</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  Example<span class="op">.</span><span class="fu">printTL</span><span class="op">()</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">},</span> <span class="st">&quot;t2&quot;</span><span class="op">).</span><span class="fu">start</span><span class="op">()</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Output:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">// t2: 1</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">// t1: 1</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">// t2: 2</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">// t2: 3</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// t1: 2</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">// t1: 3</span></span></code></pre></div>
+</section></section>
+<section id="threadlocals" class="title-slide slide level1">
+<h1>ThreadLocals</h1>
+<ul>
+<li class="fragment">Allow us to pass context without explicit parameters</li>
+<li class="fragment">Java’s Mapped Diagnostic Context (MDC) and OpenTelemetry pass their context using ThreadLocal</li>
+<li class="fragment">Can use <code>InheritableThreadLocal</code> to pass on context to child threads
+<ul>
+<li class="fragment">e.g. background tasks</li>
+</ul></li>
+</ul>
+</section>
+
+<section id="the-trouble-with-threads" class="title-slide slide level1">
+<h1>The trouble with Threads</h1>
+<ul>
+<li class="fragment">Older HTTP libraries create a new thread per request</li>
+<li class="fragment">But each thread has a base cost of ~1MB</li>
+<li class="fragment">CPU Core switching between threads (“context switching”) is expensive</li>
+<li class="fragment">Not <em>web-scale</em></li>
+</ul>
+</section>
+
+<section>
+<section id="lets-reuse-threads" class="title-slide slide level1">
+<h1>Let’s reuse threads! 💡</h1>
+<ul>
+<li class="fragment">Have a pool of threads and submit “tasks” (Runnable) to it</li>
+<li class="fragment"><code>Runnable</code> (equivalent to <code>() =&gt; Unit</code>) have much smaller overhead</li>
+<li class="fragment">“Async”</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> <span class="ex">Runnable</span> <span class="op">{</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">run</span><span class="op">():</span> <span class="bu">Unit</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> <span class="ex">Executor</span> <span class="op">{</span> <span class="co">// The threadpool interface</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">execute</span><span class="op">(</span>task<span class="op">:</span> <span class="ex">Runnable</span><span class="op">):</span> <span class="bu">Unit</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section class="slide level2">
+
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> threadpool <span class="op">=</span> <span class="ex">Executors</span><span class="op">.</span><span class="fu">newFixedThreadPool</span><span class="op">(</span><span class="dv">4</span><span class="op">)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>threadpool<span class="op">.</span><span class="fu">execute</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">step 1</span><span class="ss">&quot;</span><span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> x <span class="op">=</span> <span class="st">&quot;a&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    threadpool<span class="op">.</span><span class="fu">execute</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">step 2</span><span class="ss">&quot;</span><span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> y <span class="op">=</span> x <span class="op">++</span> <span class="st">&quot;b&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        threadpool<span class="op">.</span><span class="fu">execute</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">complete! </span><span class="ss">$y&quot;</span><span class="op">)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<ul>
+<li class="fragment">Java/Scala Futures, Effect runtimes (Cats-effect, ZIO) are all built on this</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<p><img class="no-box" width="600px" src="assets/images/forgot.jpg" /></p>
+</section>
+<section class="slide level2">
+
+<div class="sourceCode" id="cb5"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> threadpool <span class="op">=</span> <span class="ex">Executors</span><span class="op">.</span><span class="fu">newFixedThreadPool</span><span class="op">(</span><span class="dv">4</span><span class="op">)</span> <span class="co">// 4 threads in pool</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> CONTEXT <span class="op">=</span> <span class="ex">ThreadLocal</span><span class="op">.</span><span class="fu">withInitial</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="st">&quot;no user&quot;</span><span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  threadpool<span class="op">.</span><span class="fu">execute</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    CONTEXT<span class="op">.</span><span class="fu">set</span><span class="op">(</span><span class="st">&quot;user1&quot;</span><span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;${</span><span class="ex">Thread</span><span class="op">.</span><span class="fu">currentThread</span><span class="op">().</span>getName<span class="ss">}</span><span class="st">: step 1 for </span><span class="ss">${</span>CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span><span class="ss">}&quot;</span><span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    threadpool<span class="op">.</span><span class="fu">execute</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;${</span><span class="ex">Thread</span><span class="op">.</span><span class="fu">currentThread</span><span class="op">().</span>getName<span class="ss">}</span><span class="st">: step 2 for </span><span class="ss">${</span>CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span><span class="ss">}&quot;</span><span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      threadpool<span class="op">.</span><span class="fu">execute</span><span class="op">(()</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;${</span><span class="ex">Thread</span><span class="op">.</span><span class="fu">currentThread</span><span class="op">().</span>getName<span class="ss">}</span><span class="st">: complete for </span><span class="ss">${</span>CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span><span class="ss">}&quot;</span><span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="op">})</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">})</span></span></code></pre></div>
+<div class="fragment">
+<pre><code>pool-1-thread-1: step 1 for user1
+pool-1-thread-2: step 2 for no_user
+pool-1-thread-3: complete for no_user</code></pre>
+</div>
+<ul>
+<li class="fragment">We’ve lost the context because another thread executed step 2</li>
+<li class="fragment">Worse, another unrelated task executing on thread 1 now has “user 1” as its context!</li>
+</ul>
+</section></section>
+<section>
+<section id="making-threadlocal-work-with-async" class="title-slide slide level1">
+<h1>Making ThreadLocal work with Async</h1>
+<ul>
+<li class="fragment">💡 Capture ThreadLocal value in the submitting thread and set it when running in the new thread</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="fu">CurrentContextExecutor</span><span class="op">(</span>delegate<span class="op">:</span> <span class="ex">Executor</span><span class="op">)</span> <span class="kw">extends</span> <span class="ex">Executor</span><span class="op">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">def</span> <span class="fu">execute</span><span class="op">(</span>task<span class="op">:</span> <span class="ex">Runnable</span><span class="op">):</span> <span class="bu">Unit</span> <span class="op">=</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> toAttach <span class="op">=</span> CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span>                <span class="co">/*1*/</span>  <span class="co">// T1</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> wrappedTask <span class="op">=</span> <span class="fu">wrap</span><span class="op">(</span>task<span class="op">,</span> toAttach<span class="op">)</span>             <span class="co">// T1</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    delegate<span class="op">.</span><span class="fu">execute</span><span class="op">(</span>wrappedTask<span class="op">)</span>                      <span class="co">// T1</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">wrap</span><span class="op">(</span>task<span class="op">:</span> <span class="ex">Runnable</span><span class="op">,</span> toAttach<span class="op">:</span> <span class="ex">Context</span><span class="op">):</span> <span class="ex">Runnable</span> <span class="op">=</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">()</span> <span class="op">=&gt;</span> <span class="op">{</span>                                  </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">val</span> beforeAttach <span class="op">=</span> CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span>          <span class="co">/*2*/</span>  <span class="co">//   T2</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span>                                              <span class="co">//   T2  </span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        CONTEXT<span class="op">.</span><span class="fu">set</span><span class="op">(</span>toAttach<span class="op">)</span>                   <span class="co">/*3*/</span>  <span class="co">//   T2   </span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        task<span class="op">.</span><span class="fu">run</span><span class="op">()</span>                                     <span class="co">//   T2</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">finally</span>                                          <span class="co">//   T2</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        CONTEXT<span class="op">.</span><span class="fu">set</span><span class="op">(</span>beforeAttach<span class="op">)</span>               <span class="co">/*4*/</span>  <span class="co">//   T2</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code></pre></div>
+<ol type="1">
+<li class="fragment">Resurface the context we want to pass on</li>
+<li class="fragment">In the new thread, save the context to restore too</li>
+<li class="fragment">Set the context we want to pass on</li>
+<li class="fragment">Restore the previous context on T2</li>
+</ol>
+</section>
+<section id="cats.effect.iolocal" class="slide level2">
+<h2>cats.effect.IOLocal</h2>
+<div>
+<ul>
+<li>With Cats-Effect, we don’t use threads directly so ThreadLocal isn’t the right abstraction</li>
+<li><code>IOLocal</code> allow us to pass context through our fiber</li>
+<li>Like <code>InheritableThreadLocal</code>, child fibers inherit a copy of the parent’s context</li>
+</ul>
+</div>
+</section>
+<section id="cats.effect.iolocal-example" class="slide level2">
+<h2>cats.effect.IOLocal Example</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">printLocal</span><span class="op">(</span>fiberName<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> local<span class="op">:</span> IOLocal<span class="op">[</span><span class="bu">Int</span><span class="op">]):</span> IO<span class="op">[</span><span class="bu">Unit</span><span class="op">]</span> <span class="op">=</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    local<span class="op">.</span>get<span class="op">.</span><span class="fu">flatMap</span><span class="op">(</span>i <span class="op">=&gt;</span> IO<span class="op">.</span><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;$fiberName</span><span class="st"> context is </span><span class="ss">$i&quot;</span><span class="op">))</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">updateLocal</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> updateF<span class="op">:</span> <span class="bu">Int</span> <span class="op">=&gt;</span> <span class="bu">Int</span><span class="op">,</span> CONTEXT<span class="op">:</span> IOLocal<span class="op">[</span><span class="bu">Int</span><span class="op">]):</span> IO<span class="op">[</span><span class="bu">Unit</span><span class="op">]</span> <span class="op">=</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> <span class="fu">printLocal</span><span class="op">(</span>name<span class="op">,</span> CONTEXT<span class="op">)</span> <span class="co">// print before</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> CONTEXT<span class="op">.</span><span class="fu">update</span><span class="op">(</span>updateF<span class="op">)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> <span class="fu">printLocal</span><span class="op">(</span>name<span class="op">,</span> CONTEXT<span class="op">)</span> <span class="co">// print after</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">yield</span> <span class="op">())</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">run</span><span class="op">():</span> IO<span class="op">[</span><span class="bu">Unit</span><span class="op">]</span> <span class="op">=</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      CONTEXT <span class="op">&lt;-</span> <span class="fu">IOLocal</span><span class="op">(</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> <span class="fu">printLocal</span><span class="op">(</span><span class="st">&quot;main&quot;</span><span class="op">,</span> CONTEXT<span class="op">)</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      fiber1 <span class="op">&lt;-</span> <span class="fu">updateLocal</span><span class="op">(</span><span class="st">&quot;f1&quot;</span><span class="op">,</span> _ <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> CONTEXT<span class="op">).</span>start <span class="co">// forked child fiber!</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> fiber1<span class="op">.</span>joinWithNever</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> <span class="fu">printLocal</span><span class="op">(</span><span class="st">&quot;main&quot;</span><span class="op">,</span> CONTEXT<span class="op">)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">yield</span> <span class="op">()</span></span></code></pre></div>
+</section>
+<section id="fixme" class="slide level2">
+<h2>FIXME</h2>
+<p>FIXME: Specify https://github.com/typelevel/cats-effect/pull/3636 somewhere
+FIXME: io.opentelemetry.context.Context.taskWrapping to wrap an ExecutorService to propagate across async boundaries</p>
+</section></section>
+<section id="the-near-future" class="title-slide slide level1">
+<h1>The (Near) Future</h1>
+<ul>
+<li class="fragment">With Virtual Threads (Java 21+) and ScopedValues</li>
+</ul>
+</section>
+
+<section id="the-end" class="title-slide slide level1">
+<h1>THE END</h1>
+
+</section>
+    </div>
+  </div>
+
+  <script src="./revealjs/dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="./revealjs/plugin/notes/notes.js"></script>
+  <script src="./revealjs/plugin/search/search.js"></script>
+  <script src="./revealjs/plugin/zoom/zoom.js"></script>
+  <script src="./revealjs/plugin/math/math.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    		<script>
+    			// Add line numbers to all code blocks
+    			document.querySelectorAll('pre.sourceCode').forEach(ele => {
+    				ele.classList.add('numberSource')
+    			})
+    		</script>
+    </body>
+</html>
