@@ -1,7 +1,5 @@
 package example
 
-import difflicious.DiffResult
-
 import java.util.concurrent.{CountDownLatch, Executor, Executors}
 
 @main

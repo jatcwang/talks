@@ -242,34 +242,67 @@ class CurrentContextExecutor(delegate: Executor) extends Executor:
 
 ::: nonincremental
 
-- With Cats-Effect, we don't use threads directly so ThreadLocal isn't the right abstraction
+- With Cats-Effect, we *can* use `ThreadLocal` + Wrapping trick we just covered
+- But we have a better solution: `IOLocal`
 - `IOLocal` allow us to pass context through our fiber
-- Like `InheritableThreadLocal`, child fibers inherit a copy of the parent's context
+- Like `InheritableThreadLocal`, child fibers inherit a copy of the parent's context when forked
+- Not based on `ThreadLocal`, need explicit extraction if calling code that needs it
 
 :::
 
 ## cats.effect.IOLocal Example
 
 ```scala
-  def printLocal(fiberName: String, local: IOLocal[Int]): IO[Unit] =
-    local.get.flatMap(i => IO.println(s"$fiberName context is $i"))
-
-  def updateLocal(name: String, updateF: Int => Int, CONTEXT: IOLocal[Int]): IO[Unit] =
-    (for {
-      _ <- printLocal(name, CONTEXT) // print before
-      _ <- CONTEXT.update(updateF)
-      _ <- printLocal(name, CONTEXT) // print after
-    } yield ())
-    
+class FiberTest(CONTEXT: IOLocal[Int]) {
   def run(): IO[Unit] =
     for {
-      CONTEXT <- IOLocal(0)
-      _ <- printLocal("main", CONTEXT)
-      fiber1 <- updateLocal("f1", _ + 1, CONTEXT).start // forked child fiber!
+      _ <- CONTEXT.set(5)
+      fiber1 <- (for {
+        _ <- CONTEXT.get                 // = 5
+        _ <- CONTEXT.set(6)
+        _ <- CONTEXT.get                 // = 6
+      } yield ()).start
+      _ <- CONTEXT.get                   // = 5
+      _ <- CONTEXT.set(10)
       _ <- fiber1.joinWithNever
-      _ <- printLocal("main", CONTEXT)
+      _ <- CONTEXT.get                   // = 10
     } yield ()
+}
 ```
+
+## What we've seen so far
+
+- `ThreadLocal`: Context passing for synchronous code
+- **Thread pools**: Need to extract and pass the context stored in ThreadLocal to the next executing thread
+- In Cats-Effect, we can use `IOLocal` (`FiberRef` in ZIO) to pass context
+- Now, let's apply what we've learned today
+
+# OpenTelemetry - Quick Intro
+
+- **Distributed Tracing**: A method of tracking application requests as they flow in a distributed system
+- **OpenTelemetry**: An open standard for telemetry (Distributed Tracing, Metrics, etc)
+- **Span**: A recorded unit of work
+  - Attributes include `parentSpanId`, `traceId`, `isError` and `duration`
+- **Trace**: Links together a set of spans (same `traceId`), so we can track the execution trace from start to finish across services.
+
+---
+
+<img class="no-box" width="100%" src="assets/images/trace_view.png" />
+
+--- 
+
+## OpenTelemetry - Instrumentation API concepts
+
+- **Context**: The OpenTelemetry context. Key-value pairs for storing all OT-related objects
+  - The `Context` object itself is propagated around (e.g. ThreadLocal, IOLocal)
+  - `Span` object is stored in `Context`
+  - ```
+      val context = Map(
+        SPAN_KEY -> Span(traceId, spanId, ...),
+        BAGGAGE_KEY -> Baggage(..)
+      )
+    ```
+- **Tracer**: Use to create spans
 
 ## FIXME
 

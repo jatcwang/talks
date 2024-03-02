@@ -1,32 +1,27 @@
 package example
 
 import cats.effect.{ExitCode, IO, IOApp, IOLocal, FiberIO}
-
+import cats.effect.unsafe.implicits.global
 import scala.concurrent.duration.*
 
-object FiberTest extends IOApp {
-
-  def printLocal(fiberName: String, local: IOLocal[Int]): IO[Unit] =
-    local.get.flatMap(i => IO.println(s"$fiberName context is $i"))
-
-  def updateLocal(name: String, updateF: Int => Int, CONTEXT: IOLocal[Int]): IO[Unit] =
-    (for {
-      _ <- printLocal(name, CONTEXT) // print before
-      _ <- CONTEXT.update(updateF)
-      _ <- printLocal(name, CONTEXT) // print after
-    } yield ())
-
+class FiberTest(CONTEXT: IOLocal[Int]) {
   def run(): IO[Unit] =
     for {
-      CONTEXT <- IOLocal(0)
-      _ <- printLocal("main", CONTEXT)
-      fiber1 <- updateLocal("f1", _ + 1, CONTEXT).start // forked child fiber!
+      _ <- CONTEXT.set(5)
+      fiber1 <- (for {
+        _ <- CONTEXT.get                 // = 5
+        _ <- CONTEXT.set(6)
+        _ <- CONTEXT.get                 // = 6
+      } yield ()).start
+      _ <- CONTEXT.get                   // = 5
+      _ <- CONTEXT.set(10)
       _ <- fiber1.joinWithNever
-      _ <- updateLocal("main", _ => 5, CONTEXT)
-      _ <- printLocal("main", CONTEXT)
+      _ <- CONTEXT.get                   // = 10
     } yield ()
-
-  def run(args: List[String]): IO[ExitCode] =
-    run().as(ExitCode.Success)
-
 }
+
+object FiberTestApp extends IOApp.Simple {
+  def run: IO[Unit] =
+    IOLocal(0).flatMap(CONTEXT => new FiberTest(CONTEXT).run())
+}
+
