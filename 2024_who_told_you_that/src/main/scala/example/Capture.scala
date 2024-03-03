@@ -1,6 +1,6 @@
 package example
 
-import java.util.concurrent.{CountDownLatch, Executor, ExecutorService, Executors}
+import java.util.concurrent.{CountDownLatch, Executor, Executors}
 import Context.CONTEXT
 
 @main
@@ -25,7 +25,7 @@ def capture(): Unit = {
   })
   
   cdl.await()
-  ex.shutdownNow()
+  val _ = ex.shutdownNow()
 }
 
 class CurrentContextExecutor(delegate: Executor) extends Executor:

@@ -1,8 +1,6 @@
 package example
 
-import cats.effect.{ExitCode, IO, IOApp, IOLocal, FiberIO}
-import cats.effect.unsafe.implicits.global
-import scala.concurrent.duration.*
+import cats.effect.*
 
 class FiberTest(CONTEXT: IOLocal[Int]) {
   def run(): IO[Unit] =

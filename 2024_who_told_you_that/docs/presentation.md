@@ -215,6 +215,7 @@ pool-1-thread-3: complete for no_user
 
 - 💡 Capture ThreadLocal value in the submitting thread and set it when running in the new thread
 
+<div class="fragment">
 ```scala
 class CurrentContextExecutor(delegate: Executor) extends Executor:
   override def execute(task: Runnable): Unit =
@@ -223,20 +224,18 @@ class CurrentContextExecutor(delegate: Executor) extends Executor:
     delegate.execute(wrappedTask)                      // T1
     
   def wrap(task: Runnable, toAttach: Context): Runnable =
-    () => {                                  
-      val beforeAttach = CONTEXT.get()          /*2*/  //   T2
+    () =>
       try                                              //   T2  
-        CONTEXT.set(toAttach)                   /*3*/  //   T2   
+        CONTEXT.set(toAttach)                   /*2*/  //   T2   
         task.run()                                     //   T2
       finally                                          //   T2
-        CONTEXT.set(beforeAttach)               /*4*/  //   T2
-    }
+        CONTEXT.remove                          /*3*/  //   T2
 ```
+</div>
 
 1. Resurface the context we want to pass on
-2. In the new thread, save the context to restore too 
-3. Set the context we want to pass on
-4. Restore the previous context on T2
+2. Set the context we want to pass on
+3. Remove the ThreadLocal value
 
 ## cats.effect.IOLocal
 
@@ -291,24 +290,161 @@ class FiberTest(CONTEXT: IOLocal[Int]) {
 
 --- 
 
+## Otel4s - OpenTelemetry for Scala
+
+- Implementation of OTel for the Typelevel ecosystem
+- Follows OTel terminology and specification, but does not directly use OpenTelemetry-Java types
+- Uses OpenTelemetry-Java as backend (e.g. reporting spans)
+
 ## OpenTelemetry - Instrumentation API concepts
 
-- **Context**: The OpenTelemetry context. Key-value pairs for storing all OT-related objects
+- `Context`: The OpenTelemetry context. Key-value pairs for storing all OTel-related objects
   - The `Context` object itself is propagated around (e.g. ThreadLocal, IOLocal)
-  - `Span` object is stored in `Context`
+  - e.g. `Span` object is stored in `Context`
   - ```
       val context = Map(
         SPAN_KEY -> Span(traceId, spanId, ...),
         BAGGAGE_KEY -> Baggage(..)
       )
     ```
-- **Tracer**: Use to create spans
+- `Tracer`: Use to create spans
+
+## Otel4s - Let's get started!
+
+```scala mdoc:silent
+import cats.effect._
+import cats.implicits.*
+import org.typelevel.otel4s.oteljava.context.Context
+import org.typelevel.otel4s.oteljava.OtelJava
+import org.typelevel.otel4s.trace.Tracer
+```
+
+```scala mdoc:silent
+for
+  otel4s <- OtelJava.global[IO]   // Setup OTel using java's GlobalOpenTelemetry
+  given Tracer[IO] <- otel4s.tracerProvider.get("my_app") 
+
+  _ <- Tracer[IO].span("root").surround(          // Start a span, surrounding an IO
+    for
+      _ <- Tracer[IO].span("child_1").surround(
+        IO.println("work work")
+      )
+      _ <- Tracer[IO].span("child_2").surround(
+        Tracer[IO].span("grandchild_1").surround(
+          IO.println("more work done")
+        )
+      )
+    yield ()
+  )
+yield ()
+```
+
+---
+
+<img class="no-box" width="95%" src="assets/images/trace_simple.png" />
+
+---
+
+# Integrating with java libraries
+
+- In Cats Effect, we use IOLocal to propagate context, but java libs use `ThreadLocal`
+- 💡 Extract `Context` from IOLocal and set it up in ThreadLocal before calling the java code
+
+<div class="fragment">
+```scala mdoc:silent
+import cats.mtl.Local
+import io.opentelemetry.context.Context as JContext // Context type from Java OTel
+
+def blockingWithContext[A](use: => A)(using local: Local[IO, Context]): IO[A] =
+  local.ask.flatMap { (ctx: Context) =>
+    IO.blocking {
+      val jContext: JContext = ctx.underlying    
+      val scope = jContext.makeCurrent()       // Set the ThreadLocal
+      try
+        use
+      finally
+        scope.close()                          // Unset the ThreadLocal
+    }
+  }
+```
+</div>
+
+# Integrating with java libraries - Example
+
+- From a CE app, Use `java.net.http.HttpClient` to call another service
+- HTTP request should propagate the trace via HTTP headers
+
+```scala mdoc:invisible
+import java.net.URI
+import java.net.http.HttpResponse.BodyHandlers
+import java.net.http.{HttpClient, HttpRequest}
+import io.opentelemetry.api.GlobalOpenTelemetry
+
+class MyService(javaHttpClient: HttpClient) {
+  val _ = javaHttpClient
+  def doWorkAndMakeRequest: IO[Unit] = IO.unit
+}
+```
+
+<div class="fragment">
+```scala mdoc:silent
+import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry
+
+for
+  otel4s <- OtelJava.global[IO]
+  given Tracer[IO] <- otel4s.tracerProvider.get("my_app")
+  given Local[IO, Context] = otel4s.localContext
+
+  httpClient = HttpClient.newBuilder().build()
+  instrumentedHttpClient = JavaHttpClientTelemetry
+          .builder(GlobalOpenTelemetry.get())
+          .build()
+          .newHttpClient(httpClient)
+  myService = MyService(instrumentedHttpClient)
+  
+  _ <- myService.doWorkAndMakeRequest
+yield ()
+```
+</div>
+
+* `Local[IO, Context]` instance allows services to extract
+  OTel Context stored in `IOLocal`
+  
+# Integrating with java libraries - Example
+
+```scala mdoc:silent
+class MyService(
+  javaHttpClient: HttpClient
+)(using Local[IO, Context], Tracer[IO]):
+  def doWorkAndMakeRequest: IO[Unit] =
+    withSpan("root")(for 
+      _ <- withSpan("child_1")(IO.println("work work"))
+      
+      _ <- withSpan("child_2")(for
+        req <- IO(HttpRequest.newBuilder()
+          .uri(new URI("http://localhost:8080/example"))
+          .GET()
+          .build())
+        
+        _ <- withSpan("grandchild_1")(blockingWithContext {
+          javaHttpClient.send(req, BodyHandlers.ofString)
+        }.flatMap(resp => IO.println(resp.body())))
+        
+        _ <- withSpan("grandchild_2")(IO.println("more work"))
+      yield ())
+      
+    yield ())
+
+```
+
+---
+
+<img class="no-box" width="95%" src="assets/images/trace_complex.png" />
 
 ## FIXME
 
 FIXME: Specify https://github.com/typelevel/cats-effect/pull/3636 somewhere
 FIXME: io.opentelemetry.context.Context.taskWrapping to wrap an ExecutorService to propagate across async boundaries
-
 
 # The (Near) Future
 

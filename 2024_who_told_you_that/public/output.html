@@ -320,6 +320,7 @@ pool-1-thread-3: complete for no_user</code></pre>
 <ul>
 <li class="fragment">💡 Capture ThreadLocal value in the submitting thread and set it when running in the new thread</li>
 </ul>
+<div class="fragment">
 <div class="sourceCode" id="cb7"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="fu">CurrentContextExecutor</span><span class="op">(</span>delegate<span class="op">:</span> <span class="ex">Executor</span><span class="op">)</span> <span class="kw">extends</span> <span class="ex">Executor</span><span class="op">:</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">override</span> <span class="kw">def</span> <span class="fu">execute</span><span class="op">(</span>task<span class="op">:</span> <span class="ex">Runnable</span><span class="op">):</span> <span class="bu">Unit</span> <span class="op">=</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> toAttach <span class="op">=</span> CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span>                <span class="co">/*1*/</span>  <span class="co">// T1</span></span>
@@ -327,19 +328,17 @@ pool-1-thread-3: complete for no_user</code></pre>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    delegate<span class="op">.</span><span class="fu">execute</span><span class="op">(</span>wrappedTask<span class="op">)</span>                      <span class="co">// T1</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">wrap</span><span class="op">(</span>task<span class="op">:</span> <span class="ex">Runnable</span><span class="op">,</span> toAttach<span class="op">:</span> <span class="ex">Context</span><span class="op">):</span> <span class="ex">Runnable</span> <span class="op">=</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">()</span> <span class="op">=&gt;</span> <span class="op">{</span>                                  </span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">val</span> beforeAttach <span class="op">=</span> CONTEXT<span class="op">.</span><span class="fu">get</span><span class="op">()</span>          <span class="co">/*2*/</span>  <span class="co">//   T2</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span>                                              <span class="co">//   T2  </span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        CONTEXT<span class="op">.</span><span class="fu">set</span><span class="op">(</span>toAttach<span class="op">)</span>                   <span class="co">/*3*/</span>  <span class="co">//   T2   </span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        task<span class="op">.</span><span class="fu">run</span><span class="op">()</span>                                     <span class="co">//   T2</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">finally</span>                                          <span class="co">//   T2</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        CONTEXT<span class="op">.</span><span class="fu">set</span><span class="op">(</span>beforeAttach<span class="op">)</span>               <span class="co">/*4*/</span>  <span class="co">//   T2</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code></pre></div>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">()</span> <span class="op">=&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span>                                              <span class="co">//   T2  </span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        CONTEXT<span class="op">.</span><span class="fu">set</span><span class="op">(</span>toAttach<span class="op">)</span>                   <span class="co">/*2*/</span>  <span class="co">//   T2   </span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        task<span class="op">.</span><span class="fu">run</span><span class="op">()</span>                                     <span class="co">//   T2</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">finally</span>                                          <span class="co">//   T2</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        CONTEXT<span class="op">.</span>remove                          <span class="co">/*3*/</span>  <span class="co">//   T2</span></span></code></pre></div>
+</div>
 <ol type="1">
 <li class="fragment">Resurface the context we want to pass on</li>
-<li class="fragment">In the new thread, save the context to restore too</li>
 <li class="fragment">Set the context we want to pass on</li>
-<li class="fragment">Restore the previous context on T2</li>
+<li class="fragment">Remove the ThreadLocal value</li>
 </ol>
 </section>
 <section id="cats.effect.iolocal" class="slide level2">
@@ -398,20 +397,144 @@ pool-1-thread-3: complete for no_user</code></pre>
 
 <p><img class="no-box" width="100%" src="assets/images/trace_view.png" /></p>
 </section>
+<section id="otel4s---opentelemetry-for-scala" class="slide level2">
+<h2>Otel4s - OpenTelemetry for Scala</h2>
+<ul>
+<li class="fragment">Implementation of OTel for the Typelevel ecosystem</li>
+<li class="fragment">Follows OTel terminology and specification, but does not directly use OpenTelemetry-Java types</li>
+<li class="fragment">Uses OpenTelemetry-Java as backend (e.g. reporting spans)</li>
+</ul>
+</section>
 <section id="opentelemetry---instrumentation-api-concepts" class="slide level2">
 <h2>OpenTelemetry - Instrumentation API concepts</h2>
 <ul>
-<li class="fragment"><strong>Context</strong>: The OpenTelemetry context. Key-value pairs for storing all OT-related objects
+<li class="fragment"><code>Context</code>: The OpenTelemetry context. Key-value pairs for storing all OTel-related objects
 <ul>
 <li class="fragment">The <code>Context</code> object itself is propagated around (e.g. ThreadLocal, IOLocal)</li>
-<li class="fragment"><code>Span</code> object is stored in <code>Context</code></li>
+<li class="fragment">e.g. <code>Span</code> object is stored in <code>Context</code></li>
 <li class="fragment"><pre><code>    val context = Map(
       SPAN_KEY -&gt; Span(traceId, spanId, ...),
       BAGGAGE_KEY -&gt; Baggage(..)
     )</code></pre></li>
 </ul></li>
-<li class="fragment"><strong>Tracer</strong>: Use to create spans</li>
+<li class="fragment"><code>Tracer</code>: Use to create spans</li>
 </ul>
+</section>
+<section id="otel4s---lets-get-started" class="slide level2">
+<h2>Otel4s - Let’s get started!</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> cats<span class="op">.</span>effect<span class="op">.</span>_</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> cats<span class="op">.</span>implicits<span class="op">.*</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>typelevel<span class="op">.</span>otel4s<span class="op">.</span>oteljava<span class="op">.</span>context<span class="op">.</span><span class="ex">Context</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>typelevel<span class="op">.</span>otel4s<span class="op">.</span>oteljava<span class="op">.</span>OtelJava</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>typelevel<span class="op">.</span>otel4s<span class="op">.</span>trace<span class="op">.</span>Tracer</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  otel4s <span class="op">&lt;-</span> OtelJava<span class="op">.</span>global<span class="op">[</span>IO<span class="op">]</span>   <span class="co">// Setup OTel using java&#39;s GlobalOpenTelemetry</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  given Tracer<span class="op">[</span>IO<span class="op">]</span> <span class="op">&lt;-</span> otel4s<span class="op">.</span>tracerProvider<span class="op">.</span><span class="fu">get</span><span class="op">(</span><span class="st">&quot;my_app&quot;</span><span class="op">)</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  _ <span class="op">&lt;-</span> Tracer<span class="op">[</span>IO<span class="op">].</span><span class="fu">span</span><span class="op">(</span><span class="st">&quot;root&quot;</span><span class="op">).</span><span class="fu">surround</span><span class="op">(</span>          <span class="co">// Start a span, surrounding an IO</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> Tracer<span class="op">[</span>IO<span class="op">].</span><span class="fu">span</span><span class="op">(</span><span class="st">&quot;child_1&quot;</span><span class="op">).</span><span class="fu">surround</span><span class="op">(</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        IO<span class="op">.</span><span class="fu">println</span><span class="op">(</span><span class="st">&quot;work work&quot;</span><span class="op">)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      <span class="op">)</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      _ <span class="op">&lt;-</span> Tracer<span class="op">[</span>IO<span class="op">].</span><span class="fu">span</span><span class="op">(</span><span class="st">&quot;child_2&quot;</span><span class="op">).</span><span class="fu">surround</span><span class="op">(</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        Tracer<span class="op">[</span>IO<span class="op">].</span><span class="fu">span</span><span class="op">(</span><span class="st">&quot;grandchild_1&quot;</span><span class="op">).</span><span class="fu">surround</span><span class="op">(</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>          IO<span class="op">.</span><span class="fu">println</span><span class="op">(</span><span class="st">&quot;more work done&quot;</span><span class="op">)</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">)</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>      <span class="op">)</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">yield</span> <span class="op">()</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">)</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="cf">yield</span> <span class="op">()</span></span></code></pre></div>
+</section>
+<section class="slide level2">
+
+<p><img class="no-box" width="95%" src="assets/images/trace_simple.png" /></p>
+</section>
+<section class="slide level2">
+
+</section></section>
+<section id="integrating-with-java-libraries" class="title-slide slide level1">
+<h1>Integrating with java libraries</h1>
+<ul>
+<li class="fragment">In Cats Effect, we use IOLocal to propagate context, but java libs use <code>ThreadLocal</code></li>
+<li class="fragment">💡 Extract <code>Context</code> from IOLocal and set it up in ThreadLocal before calling the java code</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb12"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> cats<span class="op">.</span>mtl<span class="op">.</span>Local</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> io<span class="op">.</span>opentelemetry<span class="op">.</span>context<span class="op">.</span><span class="ex">Context</span> as JContext <span class="co">// Context type from Java OTel</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> blockingWithContext<span class="op">[</span>A<span class="op">](</span>use<span class="op">:</span> <span class="op">=&gt;</span> A<span class="op">)(</span>using local<span class="op">:</span> Local<span class="op">[</span>IO<span class="op">,</span> <span class="ex">Context</span><span class="op">]):</span> IO<span class="op">[</span>A<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  local<span class="op">.</span>ask<span class="op">.</span>flatMap <span class="op">{</span> <span class="op">(</span>ctx<span class="op">:</span> <span class="ex">Context</span><span class="op">)</span> <span class="op">=&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    IO<span class="op">.</span>blocking <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">val</span> jContext<span class="op">:</span> JContext <span class="op">=</span> ctx<span class="op">.</span>underlying    </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">val</span> scope <span class="op">=</span> jContext<span class="op">.</span><span class="fu">makeCurrent</span><span class="op">()</span>       <span class="co">// Set the ThreadLocal</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        use</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">finally</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        scope<span class="op">.</span><span class="fu">close</span><span class="op">()</span>                          <span class="co">// Unset the ThreadLocal</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+</div>
+</section>
+
+<section id="integrating-with-java-libraries---example" class="title-slide slide level1">
+<h1>Integrating with java libraries - Example</h1>
+<ul>
+<li class="fragment">From a CE app, Use <code>java.net.http.HttpClient</code> to call another service</li>
+<li class="fragment">HTTP request should propagate the trace via HTTP headers</li>
+</ul>
+<div class="fragment">
+<div class="sourceCode" id="cb13"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> io<span class="op">.</span>opentelemetry<span class="op">.</span>instrumentation<span class="op">.</span>httpclient<span class="op">.</span>JavaHttpClientTelemetry</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  otel4s <span class="op">&lt;-</span> OtelJava<span class="op">.</span>global<span class="op">[</span>IO<span class="op">]</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  given Tracer<span class="op">[</span>IO<span class="op">]</span> <span class="op">&lt;-</span> otel4s<span class="op">.</span>tracerProvider<span class="op">.</span><span class="fu">get</span><span class="op">(</span><span class="st">&quot;my_app&quot;</span><span class="op">)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  given Local<span class="op">[</span>IO<span class="op">,</span> <span class="ex">Context</span><span class="op">]</span> <span class="op">=</span> otel4s<span class="op">.</span>localContext</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  httpClient <span class="op">=</span> HttpClient<span class="op">.</span><span class="fu">newBuilder</span><span class="op">().</span><span class="fu">build</span><span class="op">()</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  instrumentedHttpClient <span class="op">=</span> JavaHttpClientTelemetry</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">builder</span><span class="op">(</span>GlobalOpenTelemetry<span class="op">.</span><span class="fu">get</span><span class="op">())</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">build</span><span class="op">()</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">newHttpClient</span><span class="op">(</span>httpClient<span class="op">)</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  myService <span class="op">=</span> <span class="fu">MyService</span><span class="op">(</span>instrumentedHttpClient<span class="op">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  _ <span class="op">&lt;-</span> myService<span class="op">.</span>doWorkAndMakeRequest</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="cf">yield</span> <span class="op">()</span></span></code></pre></div>
+</div>
+<ul>
+<li class="fragment"><code>Local[IO, Context]</code> instance allows services to extract
+OTel Context stored in <code>IOLocal</code></li>
+</ul>
+</section>
+
+<section>
+<section id="integrating-with-java-libraries---example-1" class="title-slide slide level1">
+<h1>Integrating with java libraries - Example</h1>
+<p>```mdoc scala:silent
+class MyService(
+javaHttpClient: HttpClient
+)(using Local[IO, Context], Tracer[IO]):
+def doWorkAndMakeRequest: IO[Unit] =
+withSpan(“root”)(for
+_ &lt;- withSpan(“child_1”)(IO.println(“work work”))</p>
+<pre><code>  _ &lt;- withSpan(&quot;child_2&quot;)(for
+    req &lt;- IO(HttpRequest.newBuilder()
+      .uri(new URI(&quot;http://localhost:8080/example&quot;))
+      .GET()
+      .build())
+    
+    _ &lt;- withSpan(&quot;grandchild_1&quot;)(blockingWithContext {
+      javaHttpClient.send(req, BodyHandlers.ofString)
+    }.flatMap(resp =&gt; IO.println(resp.body())))
+    
+    _ &lt;- withSpan(&quot;grandchild_2&quot;)(IO.println(&quot;more work&quot;))
+  yield ())
+  
+yield ())</code></pre>
+<p>```</p>
+</section>
+<section class="slide level2">
+
+<p><img class="no-box" width="95%" src="assets/images/trace_complex.png" /></p>
 </section>
 <section id="fixme" class="slide level2">
 <h2>FIXME</h2>

@@ -1,6 +1,6 @@
 package example
 
-import java.util.concurrent.{CountDownLatch, Executor, Executors}
+import java.util.concurrent.{CountDownLatch, Executors}
 
 @main
 def main(): Unit = {
@@ -25,5 +25,5 @@ def main(): Unit = {
   })
   
   cdl.await()
-  threadpool.shutdownNow()
+  val _ = threadpool.shutdownNow()
 }
