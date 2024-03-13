@@ -33,11 +33,6 @@ object Trace2Main extends IOApp.Simple {
     yield ()
 }
 
-extension [F[_], A](fa: F[A])
-  def markSpan(name: String)(using T: Tracer[F]): F[A] = {
-    T.span(name).surround(fa)
-  }
-
 def withSpan[F[_], A](name: String)(using T: Tracer[F])(io: F[A]): F[A] =
   T.span(name).surround(io)
 
@@ -54,24 +49,22 @@ def blockingWithContext[A](use: => A)(using L: Local[IO, Context]): IO[A] =
     }
   }
 
-class MyService(javaHttpClient: HttpClient)(using Local[IO, Context], Tracer[IO]) {
+class MyService(javaHttpClient: HttpClient)(using Local[IO, Context], Tracer[IO]):
 
   def doWorkAndMakeRequest: IO[Unit] =
-    withSpan("root")(for 
+    withSpan("root")(for
       _ <- withSpan("child_1")(IO.println("work work"))
-      
+
       _ <- withSpan("child_2")(for
         req <- IO(HttpRequest.newBuilder()
           .uri(new URI("http://localhost:8080/example"))
           .GET()
           .build())
-        
-        _ <- withSpan("grandchild_1")(blockingWithContext {
+
+        resp <- blockingWithContext {
           javaHttpClient.send(req, BodyHandlers.ofString)
-        }.flatMap(resp => IO.println(resp.body())))
-        
-        _ <- withSpan("grandchild_2")(IO.println("more work"))
+        }
+        _ <- IO.println(resp.body())
       yield ())
-      
+
     yield ())
-}
