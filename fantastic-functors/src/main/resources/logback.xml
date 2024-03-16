@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false" debug="false">
+    <appender name="CONSOLELOG" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} %-5level - %msg%n
+            </Pattern>
+        </encoder>
+    </appender>
+    <appender name="FILELOG" class="ch.qos.logback.core.FileAppender">
+        <File>log/application.log</File>
+        <param name="Append" value="true" />
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} %-5level - %msg%n
+            </Pattern>
+        </encoder>
+    </appender>
+    <appender name="async1" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <appender-ref ref="FILELOG"/>
+        <includeCallerData>true</includeCallerData><!-- Remove for performance if desired -->
+    </appender>
+    <appender name="async2" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <appender-ref ref="CONSOLELOG"/>
+    </appender>
+
+    <root level="WARN">
+        <!--<appender-ref ref="async1"/>-->
+        <appender-ref ref="async2"/>
+    </root>
+</configuration>
