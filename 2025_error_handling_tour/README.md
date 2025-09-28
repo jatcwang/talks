@@ -8,4 +8,8 @@ To start the slide show:
 
 Edit the [slides.md](./slides.md) to see the changes.
 
+To export PDF:
+
+`pnpm exec slidev export --with-clicks --output /tmp/lol.pdf`
+
 Learn more about Slidev at the [documentation](https://sli.dev/).

@@ -1,10 +1,12 @@
 package snippet
 
+//#region go
 sealed trait FileUploadError
 
 case class UnauthorizedUpload() extends FileUploadError
 case class NotEnoughStorageQuota() extends FileUploadError
 case class FileAlreadyExist() extends FileUploadError
+//#endregion go
 
 case class User(
   username: String,
