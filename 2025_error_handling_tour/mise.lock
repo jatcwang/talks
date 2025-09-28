@@ -1,0 +1,21 @@
+[[tools.java]]
+version = "21.0.2"
+backend = "core:java"
+
+[[tools.node]]
+version = "24.8.0"
+backend = "core:node"
+
+[tools.node.platforms.linux-x64]
+checksum = "sha256:daf68404b478b4c3616666580d02500a24148c0f439e4d0134d65ce70e90e655"
+size = 58884829
+url = "https://nodejs.org/dist/v24.8.0/node-v24.8.0-linux-x64.tar.gz"
+
+[[tools.pnpm]]
+version = "10.17.0"
+backend = "aqua:pnpm/pnpm"
+
+[tools.pnpm.platforms.linux-x64]
+checksum = "blake3:b9782ee5215848804d6fafdf4cc420973469677945d0c9b6a9729dfc9ace8e35"
+size = 65957681
+url = "https://github.com/pnpm/pnpm/releases/download/v10.17.0/pnpm-linux-x64"
