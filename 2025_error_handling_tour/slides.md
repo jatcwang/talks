@@ -210,25 +210,6 @@ def run(): IO[Either[E, A]] =
 
 <<< @/snippets2/zio.scala#go scala {all|1|all}{lines:true}
 
---- 
-
-# Boundary-Break
-
-- Scala 3 feature with many uses — including error handling!
-<v-click>
-
-- Usage:
-  - Call `boundary[T]` to open a scope
-    - `T` is the end result of the computation (success or error!).
-  - Within the scope, call `break(error)` to abort
-</v-click>
-
----
-
-# Boundary-Break
-
-<<< @/snippets3/boundary.scala#go scala {all|9|4,10|11|all}{lines: true}
-
 ---
 
 # Ox
