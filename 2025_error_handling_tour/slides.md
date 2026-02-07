@@ -214,15 +214,15 @@ def run(): IO[Either[E, A]] =
 
 # Ox
 
-- A library for direct-style concurrency
-- Error-handling utility built on top of boundary-break
+- A library for **direct-style** concurrency
+- Error-handling utility built on top of **boundary-break**
 
 <v-click>
 
 - Usage:
-  - Call `ox.either` to start a scope
-  - Unwrap `Either` with `.ok()`
-  - Raise an error with `someError.fail()`
+  - `ox.either` to start a scope
+  - Unwrap `Either`s with `.ok()`
+  - `someError.fail()` to abort with an error
 </v-click>
 
 ---
@@ -235,28 +235,33 @@ def run(): IO[Either[E, A]] =
 
 # cats-mtl / IOHandle
 
+
+### **cats-mtl**:
+
+`def doThings(param: Int)(given Raise[IO, PossibleErrors]): IO[Int]`
+
+### **IOHandle** (specialising for IO):
+
+`def doThings(param: Int)(given IORaise[PossibleErrors]): IO[Int]`
+
+---
+
+# cats-mtl / IOHandle
+
+<p></p>
+
 - **cats-mtl** provides two capabilities for error handling:
   - `Raise[F, -E]` - Capability to raise errors of type `E` in effect `F`
   - `Handle[F, E]` - Extends `Raise`, and can incepcept errors of type `E` in effect `F`
+- **IOHandle** library specializes the above for `cats.effect.IO` (+ many more conveniences!)
 
 ---
 
 # cats-mtl / IOHandle
 
-- **IOHandle** - Specializing `Raise`/`Handle` for `cats.effect.IO`
-  - `IORaise` ≈ Raise[IO, E]
-    - `def raise[A](e: E): IO[Nothing]`
-  - `IOHandle` ≈ Handle[IO, E]
-    - `def handleWith(io: IO[A])(f: E => IO[A]): IO[A]`
-
----
-
-# cats-mtl / IOHandle
-
-### Usage:
+### IOHandle Usage:
   - Call `ioHandling[E]` to open a scope
   - Call `ioAbort(err)` to abort with an error
-
 
 ---
 
