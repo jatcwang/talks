@@ -273,99 +273,76 @@ Scala 2:
 
 # IOHandle
 
-Scala 3:
-<<< @/snippets3/iohandlee.scala#go scala {all|1|4|3,13-16|all}
+Scala 3 + more helper methods:
+<<< @/snippets3/iohandlee.scala#go scala {all|3|8|12|all}
 
 ---
 
 # How it works
 
-- `ioAbort` wraps your error and throws it
+- `ioHandling`: Creates a unique marker, stored in the `IORaise` capability object
+- `ioAbort`: throws `IOHandleErrorWrapper` with the marker
+- Handler methods (`.toEither`) handles `IOHandleErrorWrapper` with the expected marker
 
+<p></p>
 ```scala
 class IOHandleErrorWrapper[E](error: E, marker: AnyRef) extends RuntimeException
 ```
 
-- Each new scope (`ioHandling`) creates a unique marker
-- The `IORaise` will attach the marker along with the error it's raising
-
----
-
-# How it works
-
-What happens inside `ioHandling`
-
-```scala {all|3|5-7|9-13|14-16}
-def doStuff(input: Int)(using IORaise[FileUploadError]): IO[Int] = ...
-
-val myMarker = new AnyRef // java.lang.Object
-
-given ioHandle: IOHandle[FileUploadError] = new IOHandle[FileUploadError]:
-  def raise(e: FileUploadError): IO[Nothing] = IO.raiseError(IOHandleErrorWrapper(e, myMarker))
-  def handleWith[A](fa: IO[A])(f: E => IO[A]): IO[A] = ...
-
-doStuff(42)(ioHandle)
-  .handleErrorWith:
-    case s: IOHandleErrorWrapper[?] if s.marker == myMarker =>
-      val err = s.error.asInstanceOf[FileUploadError]
-      // ... Now we can run error recovery with err
-    case e =>
-      // Re-throw any other types of exceptions, or IOHandleErrorWrapper with a different marker
-      IO.raiseError(e)
-```
 
 ---
 
 # Caveats
 
-- IOHandle throws `IOHandleErrorWrapper`... it can be unintentionally caught & swallowed!
-- Boundary-break has similar failures
+- `IOHandleErrorWrapper` can be unintentionally caught & swallowed by user code!
+- Solution: use `handleUnexpectedWith` instead of `handleErrorWith`
 
 ````md magic-move
 ```scala
 ioHandling[MyError]:
   checkSomething()
     .flatMap(succeeded => ioAbortIf(!succeeded, BadResult(..)))
-    .handleErrorWith:
-      case e =>
-        IO.println("something bad happened!") // swallowed!
+    .handleErrorWith: e =>
+        IO.println("something bad happened!") // swallowed! :(
 ```
 
 ```scala {4}
 ioHandling[MyError]:
   checkSomething()
     .flatMap(succeeded => ioAbortIf(!succeeded, BadResult(..)))
-    .handleUnexpectedWith:
-      case e =>
+    .handleUnexpectedWith: e =>
         IO.println("something bad happened!")
 ```
 ````
 
 ---
 
-# Summary of libraries
+# Summary
 
-- **Cats-effect**: Check out cats-mtl / IOHandle!
-- **ZIO**: You're not missing out :) 
-- **Direct-style**: Young & maturing ecosystem
+How do the libraries compare when it comes to typed-errors?
 
-<v-click>
+| <b>Library</b>    | <b>Succint?</b>                    | <b>Footguns / edgecases?</b>   |
+|-------------------|------------------------------------|--------------------------------|
+| EitherT           | <span class="hm">Not really</span> | <span class="hm">Some</span>   |
+| cats-mtl/IOHandle | <span class="ok">Decent</span>     | <span class="hm">Some</span>   |
+| ox                | <span class="good">Great</span>    | <span class="hm">Some</span>   |
+| ZIO               | <span class="good">Great</span>    | <span class="good">None</span> |
 
-## Honourable mentions
+---
+
+# Honourable mentions
 
 - **Kyo**: Mix-and-match effects, including typed error handling
 - **raise4s/yaes**: For direct-style scala
-- `cats.ApplicativeError`:  Equivalent to `cats.mtl.Handle` but a bit less ergonomic
- 
-</v-click>
+- `cats.ApplicativeError`: Equivalent to `cats.mtl.Handle` but a bit less ergonomic
 
 ---
 
 # Acknowledgments
 
 - IOHandle contributors: Alex, Dmitryo, Francesco, Pavel
-- Daniel Spiewak & Thanh Le for improving `cats-mtl` error handling
-- Noel Welsh for refining this talk!
+- Daniel Spiewak & Thanh Le for innovation in `cats-mtl` `Raise/Handle`
+- Noel Welsh for reviewing this talk!
 
 --- 
 
