@@ -1,12 +1,13 @@
 package snippet
 
-import zio._
 import java.io.File
 import snippet._
 
 object zioo {
 
   // #region go
+  import zio.*
+  
   def getQuotaForPath(user: User, path: Path): ZIO[Any, UnauthorizedUpload, Int] = ???
   // UIO is an alias for ZIO[Any, Nothing, A]
   def getFile(path: Path): UIO[Option[File]] = ???

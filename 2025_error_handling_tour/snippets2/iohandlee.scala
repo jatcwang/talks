@@ -18,7 +18,7 @@ object iohandlee {
   def doUpload(path: Path, bytes: Array[Byte]): IO[Unit] = ???
 
   def upload(user: User, path: Path, bytes: Array[Byte]): IO[Either[FileUploadError, Unit]] =
-    ioHandling[FileUploadError] { implicit handle: IOHandle[FileUploadError] =>
+    ioHandling[FileUploadError] { implicit handle: IORaise[FileUploadError] =>
       for {
         bytesQuota <- getQuotaForPath(user, path)
         _ <- if (bytesQuota - bytes.length < 0)

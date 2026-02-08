@@ -19,7 +19,7 @@ def upload(user: User, path: Path, bytes: Array[Byte]): IO[Either[FileUploadErro
       for
         bytesQuota <- getQuotaForPath(user, path)
         _ <- ioAbortIf(bytesQuota - bytes.length < 0, NotEnoughStorageQuota())
-        _ <- getFile(path).abortIf(_.nonEmpty, FileAlreadyExist()))
+        _ <- getFile(path).abortIf(_.nonEmpty, FileAlreadyExist())
         _ <- doUpload(path, bytes)
       yield ()
     .toEither

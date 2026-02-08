@@ -11,7 +11,7 @@ def doUpload(path: Path, bytes: Array[Byte]): Unit = ???
 
 def upload(user: User, path: Path, bytes: Array[Byte]): Either[FileUploadError, Unit] =
   either:
-    val bytesQuota = getQuotaForPath(user, path).ok()
+    val bytesQuota: Int = getQuotaForPath(user, path).ok()
     if bytesQuota - bytes.length < 0 then NotEnoughStorageQuota().fail()
     if getFile(path).nonEmpty then FileAlreadyExist().fail()
     doUpload(path, bytes)

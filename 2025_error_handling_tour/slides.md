@@ -6,11 +6,15 @@ background: /safari2.jpg
 
 # Tour of Typed Error Handling
 
+## Jacob Wang
+
+Feb 2026, London Scala User Group
+
 ---
 
 # Hello 👋
 
-- Scala since 2015
+- Writing Scala since 2015
 - Maintainer of libraries like Difflicious, Doobie, etc
 - @jatcwang (GitHub, mas.to, Bluesky)
 
@@ -154,6 +158,12 @@ layout: section
 
 # 🚙 _Let the tour begin!_ 🦖
 
+--- 
+layout: section
+---
+
+# IO[Either[E, A]]
+
 ---
 
 # IO[Either[E, A]]
@@ -180,6 +190,11 @@ def run(): IO[Either[E, A]] =
   }
 ```
 
+--- 
+layout: section
+---
+
+# EitherT
 
 ---
 
@@ -192,9 +207,15 @@ def run(): IO[Either[E, A]] =
 
 ---
 
-# cats.data.EitherT
+# EitherT
 
 <<< @/snippets2/EitherT.scala#go scala {all|5|13|all}{lines:true}
+
+--- 
+layout: section
+---
+
+# ZIO
 
 ---
 
@@ -202,47 +223,27 @@ def run(): IO[Either[E, A]] =
 
 `ZIO[-R, +E, +A]`
 
-- Integrates typed error directly into the effect type
+- Integrates typed error directly into the effect type (`E`)
 
 ---
 
 # ZIO
 
-<<< @/snippets2/zio.scala#go scala {all|1|all}{lines:true}
+<<< @/snippets2/zio.scala#go scala {all|3|11-12|all}{lines:true}
 
----
-
-# Ox
-
-- A library for **direct-style** concurrency
-- Error-handling utility built on top of **boundary-break**
-
-<v-click>
-
-- Usage:
-  - `ox.either` to start a scope
-  - Unwrap `Either`s with `.ok()`
-  - `someError.fail()` to abort with an error
-</v-click>
-
----
-
-# Ox
-
-<<< @/snippets3/ox.scala#go scala {all|4-6|9|4,10|11|all}{lines: true}
-
+--- 
+layout: section
 ---
 
 # cats-mtl / IOHandle
 
+---
 
-### **cats-mtl**:
+# cats-mtl
+
+- `Raise[F, E]`
 
 `def doThings(param: Int)(given Raise[IO, PossibleErrors]): IO[Int]`
-
-### **IOHandle** (specialising for IO):
-
-`def doThings(param: Int)(given IORaise[PossibleErrors]): IO[Int]`
 
 ---
 
@@ -250,10 +251,20 @@ def run(): IO[Either[E, A]] =
 
 <p></p>
 
-- **cats-mtl** provides two capabilities for error handling:
-  - `Raise[F, -E]` - Capability to raise errors of type `E` in effect `F`
-  - `Handle[F, E]` - Extends `Raise`, and can incepcept errors of type `E` in effect `F`
-- **IOHandle** library specializes the above for `cats.effect.IO` (+ many more conveniences!)
+**cats-mtl**:
+- `Raise[F, -E]` - Capability to raise errors of type `E` in effect `F`
+- `Handle[F, E]` - Extends `Raise`, and can incepcept errors of type `E` in effect `F`
+ 
+<v-click>
+
+**IOHandle**
+
+- A library specializes the above for `cats.effect.IO` (+ many more conveniences!)
+- `IORaise` and `IOHandle`
+
+`def doThings(param: Int)(given IORaise[PossibleErrors]): IO[Int]`
+
+</v-click>
 
 ---
 
@@ -262,6 +273,7 @@ def run(): IO[Either[E, A]] =
 ### IOHandle Usage:
   - Call `ioHandling[E]` to open a scope
   - Call `ioAbort(err)` to abort with an error
+  - Handle the result with methods like `.toEither`, `.rescueWith`
 
 ---
 
@@ -274,21 +286,20 @@ Scala 2:
 # IOHandle
 
 Scala 3 + more helper methods:
-<<< @/snippets3/iohandlee.scala#go scala {all|3|8|12|all}
+<<< @/snippets3/iohandlee.scala#go scala {all|3|8|11-12|all}
 
 ---
 
 # How it works
 
-- `ioHandling`: Creates a unique marker, stored in the `IORaise` capability object
+<v-clicks>
+
+- `ioHandling`: Creates a unique marker, carried in `IORaise` capability object
 - `ioAbort`: throws `IOHandleErrorWrapper` with the marker
-- Handler methods (`.toEither`) handles `IOHandleErrorWrapper` with the expected marker
+  - `class IOHandleErrorWrapper[E](error: E, marker: AnyRef) extends RuntimeException`
+- Handler methods (`.toEither`) catch and handle `IOHandleErrorWrapper` with the expected marker
 
-<p></p>
-```scala
-class IOHandleErrorWrapper[E](error: E, marker: AnyRef) extends RuntimeException
-```
-
+</v-clicks>
 
 ---
 
@@ -315,6 +326,34 @@ ioHandling[MyError]:
 ```
 ````
 
+--- 
+layout: section
+---
+
+# Ox
+
+---
+
+# Ox
+
+- A library for **direct-style** concurrency
+- Error-handling utility built on top of **boundary-break**
+
+<v-click>
+
+- Usage:
+  - `ox.either` to start a scope
+  - Unwrap `Either`s with `.ok()`
+  - `someError.fail()` to abort with an error
+  
+</v-click>
+
+---
+
+# Ox
+
+<<< @/snippets3/ox.scala#go scala {all|4-6|9|4,10|11|all}{lines: true}
+
 ---
 
 # Summary
@@ -323,7 +362,7 @@ How do the libraries compare when it comes to typed-errors?
 
 | <b>Library</b>    | <b>Succint?</b>                    | <b>Footguns / edgecases?</b>   |
 |-------------------|------------------------------------|--------------------------------|
-| EitherT           | <span class="hm">Not really</span> | <span class="hm">Some</span>   |
+| EitherT           | <span class="hm">Not really</span> | <span class="hm">Some*</span>  |
 | cats-mtl/IOHandle | <span class="ok">Decent</span>     | <span class="hm">Some</span>   |
 | ox                | <span class="good">Great</span>    | <span class="hm">Some</span>   |
 | ZIO               | <span class="good">Great</span>    | <span class="good">None</span> |
@@ -340,14 +379,19 @@ How do the libraries compare when it comes to typed-errors?
 
 # Acknowledgments
 
-- IOHandle contributors: Alex, Dmitryo, Francesco, Pavel
-- Daniel Spiewak & Thanh Le for innovation in `cats-mtl` `Raise/Handle`
-- Noel Welsh for reviewing this talk!
+- **Daniel Spiewak & Thanh Le** for innovation in `cats-mtl` `Raise/Handle`
+- IOHandle contributors: **Alex, Dmitryo, Francesco, Pavel, David**
+- **Noel Welsh** for reviewing this talk!
 
 --- 
 
 # Thank you
 
+Here are some relevant links
+
+- [Monad Transformer issues with concurrency](https://github.com/typelevel/cats-effect/discussions/3765)
 - https://typelevel.org/blog/2025/09/02/custom-error-types.html
 - https://github.com/jatcwang/iohandle
   - `"com.github.jatcwang" %% "iohandle" % "0.1.0"`
+
+---
