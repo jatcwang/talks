@@ -30,22 +30,25 @@ Feb 2026, London Scala User Group
 
 # Errors! Failures! Faults! 💥
 
-- Errors are a fact of life for (almost) any program
-
 <v-clicks>
 
+- Errors are a fact of life for (almost) any program
 - The basics: `try-catch`, `IO/Future`'s `recoverWith`
-- Untyped
-  - Read the documentation, or implementation!
 
 </v-clicks>
 
 <v-click>
+
+- Untyped
+  - Read the documentation, or implementation!
+  
 ```scala
-def uploadFile(userId: UserId, parentPath: Path, file: File): IO[Unit] = 
-  ...
+def uploadFile(userId: UserId, parentPath: Path, file: File): IO[Unit] =
+...
 ```
+
 </v-click>
+
 
 ---
 
@@ -91,7 +94,7 @@ But which errors?
 
 **When NOT to use typed errors?**
 
-- The caller can only rethrow it - i.e. _exceptional_ circumstances
+- The caller can't do much with it other than rethrowing it
 
 </v-click>
 
@@ -209,7 +212,7 @@ layout: section
 
 # EitherT
 
-<<< @/snippets2/EitherT.scala#go scala {all|5|13|all}{lines:true}
+<<< @/snippets2/EitherT.scala#go scala {all|5|all|13|all}{lines:true}
 
 --- 
 layout: section
@@ -229,7 +232,7 @@ layout: section
 
 # ZIO
 
-<<< @/snippets2/zio.scala#go scala {all|3|11-12|all}{lines:true}
+<<< @/snippets2/zio.scala#go scala {all|3|4-6|11-12|all}{lines:true}
 
 --- 
 layout: section
@@ -273,7 +276,9 @@ layout: section
 ### IOHandle Usage:
   - Call `ioHandling[E]` to open a scope
   - Call `ioAbort(err)` to abort with an error
-  - Handle the result with methods like `.toEither`, `.rescueWith`
+  - Handle the result with methods like:
+    - `.toEither`: Converts to `IO[Either[E, A]]`
+    - `.rescueWith`: Handle the error directly
 
 ---
 
@@ -286,7 +291,7 @@ Scala 2:
 # IOHandle
 
 Scala 3 + more helper methods:
-<<< @/snippets3/iohandlee.scala#go scala {all|3|8|11-12|all}
+<<< @/snippets3/iohandlee.scala#go scala {all|3|8|11-12|4,11-12|all}
 
 ---
 
@@ -306,7 +311,7 @@ Scala 3 + more helper methods:
 # Caveats
 
 - `IOHandleErrorWrapper` can be unintentionally caught & swallowed by user code!
-- Solution: use `handleUnexpectedWith` instead of `handleErrorWith`
+- Solution: use `handleUnexpectedWith` instead of `IO#handleErrorWith`
 
 ````md magic-move
 ```scala
@@ -354,18 +359,24 @@ layout: section
 
 <<< @/snippets3/ox.scala#go scala {all|4-6|9|4,10|11|all}{lines: true}
 
+--- 
+layout: section
+---
+
+# Summary
+
 ---
 
 # Summary
 
 How do the libraries compare when it comes to typed-errors?
 
-| <b>Library</b>    | <b>Succint?</b>                    | <b>Footguns / edgecases?</b>   |
-|-------------------|------------------------------------|--------------------------------|
-| EitherT           | <span class="hm">Not really</span> | <span class="hm">Some*</span>  |
-| cats-mtl/IOHandle | <span class="ok">Decent</span>     | <span class="hm">Some</span>   |
-| ox                | <span class="good">Great</span>    | <span class="hm">Some</span>   |
-| ZIO               | <span class="good">Great</span>    | <span class="good">None</span> |
+| <b>Library</b>    | <b>Precise</b>                | <b>Succint?</b>                    | <b>Footguns / edgecases?</b>   |
+|-------------------|-------------------------------|------------------------------------|--------------------------------|
+| EitherT           | <span class="good">Yes</span> | <span class="hm">Not really</span> | <span class="hm">Some*</span>  |
+| cats-mtl/IOHandle | <span class="good">Yes</span> | <span class="ok">Decent</span>     | <span class="hm">Some</span>   |
+| ox                | <span class="good">Yes</span> | <span class="good">Great</span>    | <span class="hm">Some</span>   |
+| ZIO               | <span class="good">Yes</span> | <span class="good">Great</span>    | <span class="good">None</span> |
 
 ---
 
@@ -395,3 +406,21 @@ Here are some relevant links
   - `"com.github.jatcwang" %% "iohandle" % "0.1.0"`
 
 ---
+
+# Bonus: Effectful error accumulation?
+
+```scala {all|4|6-7|all}
+import iohandle.ioscreen.*
+
+def validatePackage(id: String, width: Int, height: Int): IO[Either[BadPackageError, Package]] =
+  ioScreen[String]:
+    (
+      checkWidthAllowedRemotely(width).reportIf(_ == false, "Too wide"),
+      checkHeightAllowedRemotely(width).reportIf(_ == false, "Too tall"),
+    ).parZip: (width, height) =>
+      Right(Package(id, width, height))
+  .handleErrors: (errors: NonEmptyVector[String]) =>
+    Left(BadPackageError(id, errors))
+
+```
+
