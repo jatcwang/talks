@@ -1,0 +1,27 @@
+.slidev-layout {
+  font-size: 1.3rem;
+}
+
+.slidev-code {
+  --slidev-code-font-size: 0.9rem;
+}
+
+.slidev-code .slidev-code-dishonored {
+  opacity: 0.5;
+}
+
+.hm {
+  color: #f5b115;
+  font-weight: bold;
+}
+
+.ok {
+  color: #9ee86e;
+  font-weight: bold;
+}
+
+
+.good {
+  color: #5ddb10;
+  font-weight: bold;
+}

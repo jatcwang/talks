@@ -1,0 +1,8 @@
+[tools]
+java = "21"
+node = "26"
+pnpm = "11"
+
+[settings]
+experimental = true
+lockfile = true
