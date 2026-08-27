@@ -1,5 +1,179 @@
+:root {
+  --deck-bg: #f7f9fc;
+  --deck-surface: #ffffff;
+  --deck-text: #172033;
+  --deck-muted: #56647b;
+  --deck-added: #16865a;
+  --deck-removed: #d94f5f;
+}
+
 .slidev-layout {
+  background:
+    radial-gradient(circle at 82% 18%, rgb(22 134 90 / 10%), transparent 27%),
+    linear-gradient(135deg, var(--deck-bg), #eef3f8 72%);
+  color: var(--deck-text);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 1.3rem;
+  padding: 3.75rem 4.5rem;
+}
+
+.slidev-layout h1,
+.slidev-layout h2,
+.slidev-layout h3,
+.slidev-layout p {
+  margin: 0;
+}
+
+.slidev-layout h1 {
+  color: var(--deck-text);
+  font-size: 3.25rem;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.eyebrow {
+  color: var(--deck-added);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+}
+
+.cover-slide {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.cover-slide::before,
+.cover-slide::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+}
+
+.cover-slide::before {
+  background: linear-gradient(90deg, var(--deck-removed) 0 48%, transparent 48% 52%, var(--deck-added) 52%);
+  height: 0.3rem;
+  left: 4.5rem;
+  top: 3.5rem;
+  width: 5.75rem;
+}
+
+.cover-slide::after {
+  border: 1px solid rgb(23 32 51 / 10%);
+  border-radius: 999px;
+  height: 23rem;
+  right: -7rem;
+  top: -8rem;
+  width: 23rem;
+}
+
+.cover-slide h1 {
+  font-size: 5.4rem;
+  max-width: 80%;
+}
+
+.cover-slide h2 {
+  align-items: center;
+  color: var(--deck-muted);
+  display: flex;
+  font-size: 1.8rem;
+  font-weight: 450;
+  gap: 0.35em;
+  letter-spacing: -0.025em;
+  margin-top: 0.75rem;
+}
+
+.cover-slide .robot {
+  display: inline-flex;
+  font-size: 1.45em;
+  line-height: 1;
+}
+
+.cover-slide .presenter {
+  border-left: 3px solid var(--deck-added);
+  color: var(--deck-text);
+  font-size: 1.05rem;
+  font-weight: 650;
+  margin-top: 2.7rem;
+  padding-left: 0.85rem;
+}
+
+.diff-mark {
+  bottom: 3.4rem;
+  display: flex;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 5rem;
+  font-weight: 800;
+  gap: 0.2em;
+  line-height: 1;
+  position: absolute;
+  right: 4.5rem;
+}
+
+.diff-mark .removed {
+  color: var(--deck-removed);
+}
+
+.diff-mark .added {
+  color: var(--deck-added);
+}
+
+.intro-slide {
+  position: relative;
+}
+
+.intro-slide::after {
+  background: linear-gradient(var(--deck-removed) 0 35%, transparent 35% 50%, var(--deck-added) 50% 85%, transparent 85%);
+  content: '';
+  height: 7rem;
+  opacity: 0.75;
+  position: absolute;
+  right: 4.5rem;
+  top: 4rem;
+  width: 0.35rem;
+}
+
+.intro-slide h1 {
+  margin-bottom: 2.75rem;
+}
+
+.intro-slide ul {
+  display: grid;
+  gap: 1.15rem;
+  list-style: none;
+  margin: 0;
+  max-width: 46rem;
+  padding: 0;
+}
+
+.intro-slide li {
+  color: var(--deck-muted);
+  font-size: 1.4rem;
+  line-height: 1.45;
+  padding-left: 2rem;
+  position: relative;
+}
+
+.intro-slide li::before {
+  color: var(--deck-added);
+  content: '+';
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 800;
+  left: 0;
+  position: absolute;
+}
+
+.intro-slide strong {
+  color: var(--deck-text);
+  font-weight: 700;
 }
 
 .slidev-code {

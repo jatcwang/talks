@@ -1,24 +1,23 @@
 ---
 title: Difflicious
 layout: cover
-background: /safari2.jpg
+class: cover-slide
 ---
 
-# Difflicious 
+<div class="eyebrow">London Scala User Group · Aug 2026</div>
 
-## Diffs for Humans and 🤖
+# Difflicious
 
-### Jacob Wang
+## Diffs for humans and <span class="robot">🤖</span>
 
-Feb 2026, London Scala User Group
+<div class="presenter">Jacob Wang</div>
 
+---
+class: intro-slide
 ---
 
 # Hello 👋
 
-- Writing Scala since 2015
-- Maintainer of libraries like Difflicious, Doobie, etc
-- @jatcwang (GitHub, mas.to, Bluesky)
-
----
-
+- **Writing Scala since 2015**
+- **Library maintainer** — Difflicious, Doobie, and more
+- **@jatcwang** on GitHub, Mastodon, and Bluesky
