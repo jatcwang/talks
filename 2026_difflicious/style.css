@@ -176,6 +176,69 @@
   font-weight: 700;
 }
 
+.hate-tests-slide h1 {
+  margin-bottom: 2.75rem;
+}
+
+.test-transition {
+  align-items: baseline;
+  display: flex;
+  font-size: 1.55rem;
+  gap: 0.65rem;
+  line-height: 1.45;
+}
+
+.test-bullet {
+  color: var(--deck-removed);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 800;
+}
+
+.writing-stack {
+  display: inline-grid;
+}
+
+.writing-stack > span {
+  grid-area: 1 / 1;
+}
+
+.writing-tests {
+  color: var(--deck-text);
+  font-weight: 650;
+}
+
+.writing-tests.struck {
+  color: var(--deck-muted);
+  position: relative;
+}
+
+.writing-tests.struck::after {
+  background: var(--deck-removed);
+  content: '';
+  height: 0.1em;
+  left: -0.04em;
+  position: absolute;
+  top: 52%;
+  transform: rotate(-1deg);
+  transition: width 240ms ease 80ms;
+  width: 0;
+}
+
+.writing-tests.struck.slidev-vclick-current::after,
+.writing-tests.struck.slidev-vclick-prior::after {
+  width: 108%;
+}
+
+.ai-copy {
+  color: var(--deck-added);
+  font-weight: 700;
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.ai-copy.slidev-vclick-hidden {
+  transform: translateX(-0.45rem);
+}
+
 .slidev-code {
   --slidev-code-font-size: 0.9rem;
 }
