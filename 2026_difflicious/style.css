@@ -180,63 +180,68 @@
   margin-bottom: 2.75rem;
 }
 
-.test-transition {
-  align-items: baseline;
-  display: flex;
-  font-size: 1.55rem;
-  gap: 0.65rem;
-  line-height: 1.45;
+.hate-tests-slide ul {
+  margin: 0;
+  padding-left: 1.5rem;
 }
 
-.test-bullet {
+.hate-tests-slide li {
+  font-size: 1.55rem;
+  line-height: 1.45;
+  margin-bottom: 0.8rem;
+}
+
+.hate-tests-slide li::marker {
   color: var(--deck-removed);
+}
+
+.failure-slide h1 {
+  margin-bottom: 2rem;
+}
+
+.failure-slide pre {
+  background: rgb(217 79 95 / 8%);
+  border-left: 0.35rem solid var(--deck-removed);
+  border-radius: 0 0.45rem 0.45rem 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 1.5rem 1.75rem;
+  white-space: pre-wrap;
+}
+
+.failure-slide pre code,
+.failure-slide pre code span {
+  color: var(--deck-removed) !important;
+}
+
+.failure-slide pre code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: inherit;
 }
 
 .writing-stack {
   display: inline-grid;
+  font-weight: 650;
 }
 
 .writing-stack > span {
   grid-area: 1 / 1;
 }
 
-.writing-tests {
-  color: var(--deck-text);
-  font-weight: 650;
-}
-
-.writing-tests.struck {
+.writing-stack .struck {
   color: var(--deck-muted);
-  position: relative;
-}
-
-.writing-tests.struck::after {
-  background: var(--deck-removed);
-  content: '';
-  height: 0.1em;
-  left: -0.04em;
-  position: absolute;
-  top: 52%;
-  transform: rotate(-1deg);
-  transition: width 240ms ease 80ms;
-  width: 0;
-}
-
-.writing-tests.struck.slidev-vclick-current::after,
-.writing-tests.struck.slidev-vclick-prior::after {
-  width: 108%;
+  text-decoration-color: var(--deck-removed);
+  text-decoration-line: line-through;
+  text-decoration-thickness: 0.1em;
 }
 
 .ai-copy {
   color: var(--deck-added);
   font-weight: 700;
-  transition: opacity 180ms ease, transform 220ms ease;
-}
-
-.ai-copy.slidev-vclick-hidden {
-  transform: translateX(-0.45rem);
 }
 
 .slidev-code {

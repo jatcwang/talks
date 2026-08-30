@@ -34,11 +34,67 @@ class: hate-tests-slide
 
 # We hate tests!
 
-<div class="test-transition">
-  <span class="test-bullet">−</span>
-  <span class="writing-stack">
-    <span class="writing-tests" v-click-hide="1">Writing tests</span>
-    <span class="writing-tests struck" v-click="1">Writing tests</span>
-  </span>
-  <span class="ai-copy" v-click="1">AIs write them</span>
-</div>
+<v-clicks>
+
+- Writing tests
+- Deciphering test failures!
+
+</v-clicks>
+
+---
+class: failure-slide
+---
+
+# We hate tests!
+
+```text
+[info]   Order("order-123", 83.97, "42 Scala Lane, London, SW1A 1AA", List(Package(List(Item("item-1", "Cushion", 2, 19.99), Item("item-2", "Custom T-shirt", 1, 24.99)), InTransit), Package(List(Item("item-3", "Printed tote bag", 2, 19.00)), Preparing))) did not equal Order("order-123", 83.97, "42 Scala Lane, London, SW1A 1AA", List(Package(List(Item("item-1", "Engraved mug", 2, 19.99), Item("item-2", "Custom T-shirt", 1, 24.99)), InTransit), Package(List(Item("item-3", "Printed tote bag", 1, 19.00)), Preparing))) (OrderScalatestSuite.scala:13)
+```
+
+---
+
+# We hate tests!
+
+<p></p>
+
+Newer test frameworks like MUnit / Weaver are better
+
+<img src="/munit_diff.png" alt="MUnit diff showing changed item names and quantities" style="display: block; width: 60%; margin: 1.5rem auto;" />
+
+---
+
+# We hate tests!
+
+<p></p>
+
+However, textual diff struggles with more complex cases
+
+<img src="/munit_diff_big.png" alt="MUnit diff showing changed item names and quantities" style="display: block; width: 40%; margin: 1rem auto;" />
+
+---
+
+# Other challenges 
+
+<p></p>
+
+When comparing complex data, we might need to:
+
+- Skip comparing a subset
+- Customize how elements are matched for comparison
+
+---
+
+# Difflicious
+
+<v-clicks>
+
+- Structural diffs
+- Configurable comparison
+- Readable diff results
+  - Interactive terminal UI for humans 👥
+  - Plain, low noise output for AIs 🤖
+  
+</v-clicks>
+  
+---
+
