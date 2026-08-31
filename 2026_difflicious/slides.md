@@ -57,7 +57,7 @@ class: failure-slide
 
 <p></p>
 
-Newer test frameworks like MUnit / Weaver are better
+MUnit / Weaver are better with textual diffs
 
 <img src="/munit_diff.png" alt="MUnit diff showing changed item names and quantities" style="display: block; width: 60%; margin: 1.5rem auto;" />
 
@@ -67,7 +67,7 @@ Newer test frameworks like MUnit / Weaver are better
 
 <p></p>
 
-However, textual diff struggles with more complex cases
+However, textual diff are less useful for more complex cases
 
 <img src="/munit_diff_big.png" alt="MUnit diff showing changed item names and quantities" style="display: block; width: 40%; margin: 1rem auto;" />
 
@@ -78,6 +78,8 @@ However, textual diff struggles with more complex cases
 <p></p>
 
 When comparing complex data, we might need to:
+
+<p style="margin-top: 0.5rem"></p>
 
 - Skip comparing a subset
 - Customize how elements are matched for comparison
@@ -92,9 +94,45 @@ When comparing complex data, we might need to:
 - Configurable comparison
 - Readable diff results
   - Interactive terminal UI for humans 👥
-  - Plain, low noise output for AIs 🤖
+  - Low noise output modes for AIs 🤖
   
 </v-clicks>
   
 ---
 
+# Difflicious
+
+````md magic-move
+
+```scala {all|6|9|all}{lines:true}
+import difflicious.Differ
+import difflicious.munit.MUnitDiffliciousSuite
+
+class OrderTest extends FunSuite with MUnitDiffliciousSuite {
+
+  val orderDiffer: Differ[Order] = Differ.derivedDeep[Order]
+
+  test("order matches expectation") {
+    orderDiffer.assertNoDiff(actualOrder, expectedOrder)
+  }
+
+}
+```
+
+```scala {all}{lines:true}
+import difflicious.Differ
+import difflicious.munit.MUnitDiffliciousSuite
+
+class OrderTest extends FunSuite with MUnitDiffliciousSuite {
+
+  val orderDiffer: Differ[Order] = Differ.derivedDeep[Order]
+    .ignoreAt(_.packages.each.packageId)
+
+  test("order matches expectation") {
+    orderDiffer.assertNoDiff(actualOrder, expectedOrder)
+  }
+
+}
+```
+
+````

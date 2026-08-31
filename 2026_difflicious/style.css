@@ -51,8 +51,7 @@
   position: relative;
 }
 
-.cover-slide::before,
-.cover-slide::after {
+.cover-slide::before {
   content: '';
   pointer-events: none;
   position: absolute;
@@ -64,15 +63,6 @@
   left: 4.5rem;
   top: 3.5rem;
   width: 5.75rem;
-}
-
-.cover-slide::after {
-  border: 1px solid rgb(23 32 51 / 10%);
-  border-radius: 999px;
-  height: 23rem;
-  right: -7rem;
-  top: -8rem;
-  width: 23rem;
 }
 
 .cover-slide h1 {
