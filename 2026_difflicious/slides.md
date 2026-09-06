@@ -73,19 +73,6 @@ However, textual diff are less useful for more complex cases
 
 ---
 
-# Other challenges 
-
-<p></p>
-
-When comparing complex data, we might need to:
-
-<p style="margin-top: 0.5rem"></p>
-
-- Skip comparing a subset
-- Customize how elements are matched for comparison
-
----
-
 # Difflicious
 
 <v-clicks>
@@ -94,7 +81,8 @@ When comparing complex data, we might need to:
 - Configurable comparison
 - Readable diff results
   - Interactive terminal UI for humans 👥
-  - Low noise output modes for AIs 🤖
+  - Plain output modes for AIs 🤖
+- Integrates with popular test frameworks
   
 </v-clicks>
   
@@ -135,4 +123,51 @@ class OrderTest extends FunSuite with MUnitDiffliciousSuite {
 }
 ```
 
+```scala {all}{lines:true}
+import difflicious.Differ
+import difflicious.munit.MUnitDiffliciousSuite
+
+class OrderTest extends FunSuite with MUnitDiffliciousSuite {
+
+  val orderDiffer: Differ[Order] = Differ.derivedDeep[Order]
+    .ignoreAt(_.packages.each.packageId)
+    .configure(_.packages)(_.pairBy(_.packageId))
+
+  test("order matches expectation") {
+    orderDiffer.assertNoDiff(actualOrder, expectedOrder)
+  }
+
+}
+```
+
 ````
+
+---
+
+# Demo time!
+
+---
+
+# Other challenges 
+
+<p></p>
+
+When comparing complex data, we might need to:
+
+<p style="margin-top: 0.5rem"></p>
+
+- Skip comparing a subset
+- Customize how list elements are matched for comparison
+
+---
+
+# Not always in control
+
+<img src="/orders.excalidraw.svg" style="display: block; width: 40%; margin: 1.5rem auto;" />
+
+- Database-generated IDs
+- Non-deterministic order of returned values
+
+--- 
+
+# Thanks! Questions?

@@ -83,17 +83,16 @@
 
 .cover-slide .robot {
   display: inline-flex;
-  font-size: 1.45em;
+  font-size: 1.20em;
   line-height: 1;
+  margin-bottom: 10px;
 }
 
 .cover-slide .presenter {
-  border-left: 3px solid var(--deck-added);
   color: var(--deck-text);
   font-size: 1.05rem;
   font-weight: 650;
   margin-top: 2.7rem;
-  padding-left: 0.85rem;
 }
 
 .diff-mark {
