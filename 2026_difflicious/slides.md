@@ -85,14 +85,75 @@ However, textual diff are less useful for more complex cases
 - Integrates with popular test frameworks
   
 </v-clicks>
+
+---
+
+# Using difflicious
+
+<p></p>
+
+<v-clicks>
+
+1. Setup test framework integration
+1. Create `Differ` instances and configure them 
+1. `myDiffer.assertNoDiff` on two values
+
+</v-clicks>
+
   
 ---
 
-# Difflicious
+# Today's example
+
+<p></p>
+
+<pre style="font-size: 1.2rem">
+<b>Order</b>
+├── orderId: String
+├── priceTotal: Double
+├── address: String
+└── packages: List[Package]
+    └── <b>Package</b>
+        ├── packageId: String
+        ├── items: List[Item]
+        │   └── <b>Item</b>
+        │       ├── itemId: String
+        │       ├── name: String
+        │       ├── quantity: Int
+        │       └── unitPrice: Double
+        └── deliveryStatus: DeliveryStatus
+</pre>
+
+---
+
+# Using Difflicious
+
+<div style="margin-top: 2rem">
+
+<b>project/plugins.sbt</b>:
+```
+addSbtPlugin("com.github.jatcwang" %% "sbt-difflicious" % "0.7.0")
+```
+
+</div>
+
+<div style="margin-top: 2rem">
+    
+<b>build.sbt</b>:
+
+```
+libraryDependencies += "com.github.jatcwang" %% "difflicious-munit" % "0.7.0" % Test
+```
+</div>
+
+---
+
+# Using Difflicious
+
 
 ````md magic-move
 
-```scala {all|6|9|all}{lines:true}
+```scala {all|4|6|9|all}{lines:true}
 import difflicious.Differ
 import difflicious.munit.MUnitDiffliciousSuite
 
@@ -131,7 +192,7 @@ class OrderTest extends FunSuite with MUnitDiffliciousSuite {
 
   val orderDiffer: Differ[Order] = Differ.derivedDeep[Order]
     .ignoreAt(_.packages.each.packageId)
-    .configure(_.packages)(_.pairBy(_.packageId))
+    .configure(_.packages)(differ => differ.pairBy(_.packageId))
 
   test("order matches expectation") {
     orderDiffer.assertNoDiff(actualOrder, expectedOrder)
